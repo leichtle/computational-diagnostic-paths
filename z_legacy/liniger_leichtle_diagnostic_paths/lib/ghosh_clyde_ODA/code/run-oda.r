@@ -13,17 +13,17 @@
 #
 # ARGUMENTS
 # ---------
-# x: design matrix (not standardized) without the column corresponding to the intercept
-# y: vector of response variables
-# niter: Number of MCMC iterations
-# burnin: Burn-in used for calculating Rao-Blackwellized estimates from MCMC output
-# model:  Use model="lm" for linear regression and model="probit" for binary regression with probit link
-# prior: prior="normal" or prior="Students-t" can be used for linear regression
-#        prior="normal" is the only option for probit regression available at this time
-# lambda: An optional scale parameter used in the normal prior for regression coefficients, the recommended
-#         default value is 1 as the design matrix is standardized within the code
-# alpha:  An optional degrees of freedom parameter used in the Student's-t prior for regression coefficients,
-#         the default value is 1, leading to a Cauchy prior on regression coefficients
+# x: 		design matrix (not standardized) without the column corresponding to the intercept
+# y: 		vector of response variables
+# niter: 	Number of MCMC iterations
+# burnin: 	Burn-in used for calculating Rao-Blackwellized estimates from MCMC output
+# model:  	Use model="lm" for linear regression and model="probit" for binary regression with probit link
+# prior: 	prior="normal" or prior="Students-t" can be used for linear regression
+#        	prior="normal" is the only option for probit regression available at this time
+# lambda: 	An optional scale parameter used in the normal prior for regression coefficients, the recommended
+#         	default value is 1 as the design matrix is standardized within the code
+# alpha:  	An optional degrees of freedom parameter used in the Student's-t prior for regression coefficients,
+#         	the default value is 1, leading to a Cauchy prior on regression coefficients
 #
 # VALUE
 # -------
@@ -36,7 +36,7 @@
 #
 # NOTE
 # -----
-# To calculate Rao-Blackwellized estimates of individual model probabilities use the function modelprobs.rb()
+# To calculate Rao-Blackwellized estimates of individual model probabilities, use the function modelprobs.rb()
 ######################  DOCUMENTATION FOR oda.bma()  #############################################################################################
 
 
@@ -50,11 +50,9 @@ betatrue = c(4,2,0,0,0,-1,0,1.5, 0,0,0,1,0,.5,0,0)
 
 set.seed(100)
 Z = matrix(rnorm(n*10, 0, 1), ncol=10, nrow=n)
-X = cbind(Z, (Z[,1:5] %*% c(.3, .5, .7, .9, 1.1) %*% t(rep(1,5)) +
-              matrix(rnorm(n*5, 0, 1), ncol=5, nrow=n)))
+X = cbind(Z, (Z[,1:5] %*% c(.3, .5, .7, .9, 1.1) %*% t(rep(1,5)) + matrix(rnorm(n*5, 0, 1), ncol=5, nrow=n)))
 
-Y = 4 + 2*X[,1] - X[,5] + 1.5*X[,7] + X[,11] + 0.5*X[,13] + rnorm(n,0,
-sigma)
+Y = 4 + 2*X[,1] - X[,5] + 1.5*X[,7] + X[,11] + 0.5*X[,13] + rnorm(n, 0, sigma)
 
 simdata = data.frame(X,Y)
 
@@ -62,9 +60,9 @@ simdata = data.frame(X,Y)
 burnin.sim <- 500;
 Gtot <- 1000;
 
-oda.c <- oda.bma(x=simdata[,-16],y=simdata$Y,niter=Gtot,burnin=burnin.sim,model="lm") # Cauchy prior for lm (default)
-oda.n <- oda.bma(x=simdata[,-16],y=simdata$Y,niter=Gtot,burnin=burnin.sim,model="lm",prior="normal") # Normal prior for lm 
-oda.t <- oda.bma(x=simdata[,-16],y=simdata$Y,niter=Gtot,burnin=burnin.sim,model="lm",prior="Students-t",alpha=4) # t_4 prior for lm
+oda.c <- oda.bma(x = simdata[,-16], y = simdata$Y, niter = Gtot, burnin = burnin.sim, model = "lm") 									# Cauchy prior for lm (default)
+oda.n <- oda.bma(x = simdata[,-16], y = simdata$Y, niter = Gtot, burnin = burnin.sim, model = "lm", prior = "normal") 					# Normal prior for lm 
+oda.t <- oda.bma(x = simdata[,-16], y = simdata$Y, niter = Gtot, burnin = burnin.sim, model = "lm", prior = "Students-t", alpha = 4) 	# t_4 prior for lm
 
 names(oda.c)
 names(oda.n)

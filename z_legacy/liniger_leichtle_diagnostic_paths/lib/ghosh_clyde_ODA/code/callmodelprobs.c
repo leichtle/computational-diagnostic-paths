@@ -16,7 +16,7 @@
 void callmodelprobs(int *starnmod, int *starniter, int *starp, int *gammamat, double *probmat, double *modelprobs)
 {
   int i,j,k, nmod=*starnmod, p=*starp, niter=*starniter;
-  //int i,j,k,ngammamat=32768, nprobmat=300000, p=15;   
+  //int i, j, k, ngammamat=32768, nprobmat=300000, p=15;   
   double tempsum, tempprod;
  
  

@@ -46,14 +46,17 @@ pimay[pimay==1] <- 0; pimay[pimay==2] <- 1;
 pimax <- pima[,1:7]
 source("oda.bma.r")
 
-oda.pima <- oda.bma(x=pimax,y=pimay,niter=Gtot,burnin=burnin.sim,lambda=1,model="probit",prior="normal");
+oda.pima <- oda.bma(x = pimax, y = pimay, niter = Gtot, burnin = burnin.sim, lambda = 1, model = "probit", prior = "normal");
 
 # matrix of unique models from ODA
 gamma.u <- unique(oda.pima$gamma[-c(1:burnin.sim),])
 
 # vector of RB estimates of model probabilities corresponding to models in gamma.u
-probest <- modelprobs.rb(n.unique=nrow(gamma.u),niter=nrow(oda.pima$incprob[-c(1:burnin.sim),]),p=ncol(gamma.u),
-         gammaunique=t(gamma.u),probmat.oda=t(oda.pima$incprob[-c(1:burnin.sim),]))
+probest <- modelprobs.rb(n.unique=nrow(gamma.u),
+						niter=nrow(oda.pima$incprob[-c(1:burnin.sim),]),
+						p = ncol(gamma.u),
+						gammaunique=t(gamma.u),
+						probmat.oda = t(oda.pima$incprob[-c(1:burnin.sim),]))
 
 # Estimated posterior probability of unsampled models
 1-sum(probest) 
