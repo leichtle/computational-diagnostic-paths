@@ -15,7 +15,7 @@ if(.Platform$OS.type == "unix") {
 is.loaded("callmodelprobs") # make sure it is loaded
 
 # load data
-dataMatrix <- read.table("../imputation/results/20140721000000_mi_comb_20_iter.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
+dataMatrix <- read.table("../a_imputation/results/20140721000000_mi_comb_20_iter.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
 dataMatrix1 <- subset(dataMatrix, select=c(ALAT.1,AP.1,ASAT.1,CA.1,CK.1,CREA.1,CRP.1,GGT.1,GL.1,I200_I2519, KA.1,LDH.1,NA.1,TNT.1,UREA.1))
 colnames(dataMatrix1) <- c("ALAT","AP","ASAT","CA","CK","CREA","CRP","GGT","GL", "I200_I2519", "KA","LDH","NA.","TNT","UREA")
 
@@ -25,9 +25,9 @@ colnames(dataMatrix2) <- c("ALAT","AP","ASAT","CA","CK","CREA","CRP","GGT","GL",
 dataMatrix3 <- subset(dataMatrix, select=c(ALAT.3,AP.3,ASAT.3,CA.3,CK.3,CREA.3,CRP.3,GGT.3,GL.3,I200_I2519, KA.3,LDH.3,NA.3,TNT.3,UREA.3))
 colnames(dataMatrix3) <- c("ALAT","AP","ASAT","CA","CK","CREA","CRP","GGT","GL", "I200_I2519", "KA","LDH","NA.","TNT","UREA")
 
-dataMatrix1 <- read.csv("../b_add_label_row/results/20181003161605-mi-imputation+label.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
-# dataMatrix2 <- read.csv("../imputation/results/20140721000001-mi-imputation.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
-# dataMatrix3 <- read.csv("../imputation/results/20140721000002-mi-imputation.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
+# dataMatrix1 <- read.csv("../b_add_label_row/results/20181003161605-mi-imputation+label.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
+# dataMatrix2 <- read.csv("../a_imputation/results/20140721000001-mi-imputation.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
+# dataMatrix3 <- read.csv("../a_imputation/results/20140721000002-mi-imputation.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
 
 burnin.sim <- 500
 Gtot <- 1000
