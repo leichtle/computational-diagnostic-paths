@@ -25,7 +25,7 @@ colnames(dataMatrix2) <- c("ALAT","AP","ASAT","CA","CK","CREA","CRP","GGT","GL",
 dataMatrix3 <- subset(dataMatrix, select=c(ALAT.3,AP.3,ASAT.3,CA.3,CK.3,CREA.3,CRP.3,GGT.3,GL.3,I200_I2519, KA.3,LDH.3,NA.3,TNT.3,UREA.3))
 colnames(dataMatrix3) <- c("ALAT","AP","ASAT","CA","CK","CREA","CRP","GGT","GL", "I200_I2519", "KA","LDH","NA.","TNT","UREA")
 
-# dataMatrix1 <- read.csv("../imputation/results/20140721000000-mi-imputation.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
+dataMatrix1 <- read.csv("../b_add_label_row/results/20181003161605-mi-imputation+label.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
 # dataMatrix2 <- read.csv("../imputation/results/20140721000001-mi-imputation.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
 # dataMatrix3 <- read.csv("../imputation/results/20140721000002-mi-imputation.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
 

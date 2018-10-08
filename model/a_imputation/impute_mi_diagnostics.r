@@ -9,7 +9,9 @@ options(mc.cores = processingCoreQty) # set the number of cores used for imputat
 # flags for the code
 processingCoreQty <- 4
 chainQty <- processingCoreQty # number of separate imputation chains
-maxIterations <- 2000 # maximum iterations of imputations per chain before imputation terminates
+untilConvergence <- TRUE
+rHatsConvergence <- 1.1
+maxIterations <- 200 # maximum iterations of imputations per chain before imputation terminates
 # maxImputationMinutes <- 1000000000 # maximum minutes before imputation terminates # TODO: This parameter seems to be not setable via a variable
 isDetailed <- FALSE
 
@@ -37,7 +39,27 @@ if (isDetailed){
 mdf <- change(mdf, y = c("HDIA", "Klasse"), what="type", to = c("irrelevant", "irrelevant")) # set HDIA and Klasse as irrelevant types which are excluded from the imputation
 
 cat("Performing imputation...")
-imputedData <- mi(mdf, n.chains = chainQty, n.iter = maxIterations, R.hat = 1.1, max.minutes = 1000000000) # run multiple imputation for indicated maximum iterations and minutes
+isNotConverged = TRUE
+
+while (untilConvergence & isNotConverged) {
+  then <- Sys.time()
+  imputedData <- mi(mdf, n.chains = chainQty, n.iter = maxIterations, max.minutes = 200) # run multiple imputation for indicated maximum iterations and minutes
+  latestRHat <-Rhats(imputedData)
+  
+  # calculate and print imputations per minute
+  now <- Sys.time()
+  diff <- as.numeric(difftime(now, then, units="secs"))
+  
+  cat("Imputation speed:")
+  cat(maxIterations/diff*60)
+  print("/min")
+  print("Rhat to measure convergence of imputation (should be < 1.1):")
+  print(latestRHat)
+  isNotConverged <- any(latestRHat > rHatsConvergence)
+  if(isNotConverged){
+    print("Imputation not converged. Continuing...")
+  }
+}
 cat("Done.\n")
 
 cat("Check if enough iterations were performed...")
