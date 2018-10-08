@@ -7,7 +7,7 @@ library(data.table)
 
 source("lib/oda.bma.r")
 if(.Platform$OS.type == "unix") {
-  dyn.load("callmodelprobs.so")  # Linux/Unix
+  dyn.load("./lib/callmodelprobs.so")  # Linux/Unix
 } else {
   dyn.load("./lib/callmodelprobs.dll")  # Windows 
 }

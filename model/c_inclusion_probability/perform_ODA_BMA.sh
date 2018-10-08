@@ -1,3 +1,5 @@
 #!/bin/sh
 
-R CMD ./perform_ODA_BMA.r
+export PATH=/software/bin:$PATH
+
+R CMD BATCH ./perform_ODA_BMA.r
