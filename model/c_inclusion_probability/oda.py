@@ -142,12 +142,17 @@ def oda_probit(xo: pd.DataFrame, zo: pd.DataFrame, niter: int, burnin: int, lam_
 
             muz = np.dot(xoin, np.hstack((alphavec[i], betamat[i, ])))                                      #             muz <- xoin %*% as.matrix(c(alphavec[i], betamat[i,]))
             cdf = np.random.uniform(0, 1, s) * norm.cdf(muz[zo == 1]) + norm.cdf(-muz[zo == 1])
-            capped_cdf = [v if v < 1 else 0.99999999999 for v in cdf]       # cap rounding issue
+            capped_cdf = [v if v < 1 else 0.99999999999 for v in cdf]                                       # prevent probabilities from being 1
+            capped_cdf = [v if v > 0 else 0.00000000001 for v in capped_cdf]                                # prevent probabilities from being 0
             cdf2 = np.random.uniform(0, 1, no-s) * norm.cdf(-muz[zo == 0])
-            capped_cdf2 = [v if v < 1 else 0.99999999999 for v in cdf2]       # cap rounding issue
+            capped_cdf2 = [v if v < 1 else 0.99999999999 for v in cdf2]                                     # prevent probabilities from being 1
+            capped_cdf2 = [v if v > 0 else 0.00000000001 for v in capped_cdf2]                              # prevent probabilities from being 0
             yo[zo == 1] = muz[zo == 1] + norm.ppf(capped_cdf)                                               #             yo[zo == 1] <- muz[zo == 1] + qnorm(runif(s, 0, 1) * pnorm(muz[zo == 1]) + pnorm(- muz[zo == 1]))
             yo[zo == 0] = muz[zo == 0] + norm.ppf(capped_cdf2)                                              #             yo[zo == 0] <- muz[zo == 0] + qnorm(runif(no - s, 0, 1) * pnorm(- muz[zo == 0]))
 
+            assert(np.isfinite(muz).all())
+            assert(np.isfinite(capped_cdf).all())
+            assert(np.isfinite(capped_cdf2).all())
             assert(np.isfinite(yo[zo == 0]).all())
             assert(np.isfinite(yo[zo == 1]).all())
 
@@ -160,7 +165,7 @@ def oda_probit(xo: pd.DataFrame, zo: pd.DataFrame, niter: int, burnin: int, lam_
         beta_hat = np.mean(betaolsc[burnin:, 1:] * postincprob[burnin:, ], axis=ROW_AXIS) * (d/(d + lam_spec))                   #     beta.hat <- apply(betaolsc[- c(1 : burnin), - 1] * postincprob[- c(1 : burnin),], 2, mean) * (d / (d + lam.spec))
         beta_hat = beta_hat / sqrtvar                                                                   #     beta.hat <- beta.hat / sqrtvar
         beta0_hat = beta0_hat - sum(beta_hat * xomean)                                                  #     beta0.hat <- beta0.hat - sum(beta.hat * xomean)
-        incprob_rb = np.mean(postincprob[burnin:, ], axis=COL_AXIS)                                     #     incprob.rb <- apply(postincprob[- c(1 : burnin),], 2, mean)
+        incprob_rb = np.mean(postincprob[burnin:, ], axis=ROW_AXIS)                                     #     incprob.rb <- apply(postincprob[- c(1 : burnin),], 2, mean)
         return {
             "betama": [beta0_hat, beta_hat],
             "incprob_rb": incprob_rb,
