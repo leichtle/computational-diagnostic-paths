@@ -2,9 +2,6 @@
 # Description: Perform bayesian model averaging to get inclusion probabilities for different lab measurements (e.g. TNT, CK, LDH)
 # Reference: https://www.tandfonline.com/doi/abs/10.1198/jasa.2011.tm10518
 
-library(MASS)
-library(data.table)
-
 source("lib/oda.bma.r")
 if(.Platform$OS.type == "unix") {
   dyn.load("callmodelprobs.so")  # Linux/Unix
@@ -12,8 +9,10 @@ if(.Platform$OS.type == "unix") {
   dyn.load("./lib/callmodelprobs.dll")  # Windows 
 }
 
-is.loaded("callmodelprobs") # make sure it is loaded
-
+if(!is.loaded("callmodelprobs")){ # make sure it is loaded
+  print('callmodelprobs is not loaded')
+  quit()
+}
 # load data
 dataMatrix <- read.table("../a_imputation/results/20140721000000_mi_comb_20_iter.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
 dataMatrix1 <- subset(dataMatrix, select=c(ALAT.1,AP.1,ASAT.1,CA.1,CK.1,CREA.1,CRP.1,GGT.1,GL.1,I200_I2519, KA.1,LDH.1,NA.1,TNT.1,UREA.1))

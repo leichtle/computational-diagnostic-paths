@@ -3,6 +3,7 @@
 # Reference: https://cran.r-project.org/web/packages/mi/vignettes/mi_vignette.pdf
 
 library(mi)
+library("optparse")
 
 options(mc.cores = processingCoreQty) # set the number of cores used for imputation
 
@@ -15,9 +16,21 @@ maxIterations <- 200 # maximum iterations of imputations per chain before imputa
 # maxImputationMinutes <- 1000000000 # maximum minutes before imputation terminates # TODO: This parameter seems to be not setable via a variable
 isDetailed <- FALSE
 
+option_list = list(
+  make_option(c("-f", "--file"), type="character", default=NULL, 
+              help="dataset file name", metavar="character")
+); 
+ 
+opt_parser = OptionParser(option_list=option_list)
+opt = parse_args(opt_parser)
+
+if (is.null(opt$file)){
+  print_help(opt_parser)
+}
+
 # load data from csv
 cat("Loading data from csv...")
-miData<-read.csv("../../data/raw_myocardial_ischemia.csv",sep=",",header=TRUE)
+miData<-read.csv(opt$file,sep=",",header=TRUE)
 cat("Done.\n")
 
 if (isDetailed){
