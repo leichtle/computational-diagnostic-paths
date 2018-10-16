@@ -2,35 +2,41 @@
 # Description: Performs a chained imputation to impute missing data
 # Reference: https://cran.r-project.org/web/packages/mi/vignettes/mi_vignette.pdf
 
-library(mi)
-library("optparse")
-
-options(mc.cores = processingCoreQty) # set the number of cores used for imputation
-
-# flags for the code
-processingCoreQty <- 4
-chainQty <- processingCoreQty # number of separate imputation chains
-untilConvergence <- TRUE
-rHatsConvergence <- 1.1
-maxIterations <- 200 # maximum iterations of imputations per chain before imputation terminates
-# maxImputationMinutes <- 1000000000 # maximum minutes before imputation terminates # TODO: This parameter seems to be not setable via a variable
-isDetailed <- FALSE
+library(mi) # multiple imputation method to complete missing values in datasets
+library(optparse) # parse script arguments in a pythonic way
 
 option_list = list(
-  make_option(c("-f", "--file"), type="character", default=NULL, 
-              help="dataset file name", metavar="character")
-); 
- 
+  make_option(c("--dataset"),
+              type="character", default=NULL, help="Path to the dataset file", metavar="character"),
+  make_option(c("--processingCoreQty"),
+              type="integer", default=4, help="Number of cores to run imputation on", metavar = "integer"),
+  make_option(c("--chainQty"),
+              type="integer", default=4, help="Number of separate imputation chains", metavar = "integer"),
+  make_option(c("--untilConvergence"),
+              type="logical", default=TRUE, help="If chains should be imputed until convergence", metavar = "logical"),
+  make_option(c("--rHatsConvergence"),
+              type="double", default=1.1, help="Consider imputation converged if variance_across_chains/variance_within_chain <= rHatsConvergence", metavar = "double"),
+  make_option(c("--maxIterations"),
+              type="integer", default=200, help="Maximum iterations of imputations per chain before imputation checks for convergence", metavar = "integer"),
+  make_option(c("--isDetailed"),
+              type="logical", default=FALSE, help="Perform extra prints and outputs", metavar = "logical")
+  
+)
+
+# parse script arguments 
 opt_parser = OptionParser(option_list=option_list)
 opt = parse_args(opt_parser)
 
-if (is.null(opt$file)){
+if (is.null(opt$dataset)){  # print and stop script if dataset file path is missing
   print_help(opt_parser)
+  stop("Missing dataset file argument")
 }
+
+options(mc.cores = opt$processingCoreQty) # set the number of cores used for imputation
 
 # load data from csv
 cat("Loading data from csv...")
-miData<-read.csv(opt$file,sep=",",header=TRUE)
+miData<-read.csv(opt$dataset, sep=",", header=TRUE)
 cat("Done.\n")
 
 if (isDetailed){
@@ -56,7 +62,8 @@ isNotConverged = TRUE
 
 while (untilConvergence & isNotConverged) {
   then <- Sys.time()
-  imputedData <- mi(mdf, n.chains = chainQty, n.iter = maxIterations, max.minutes = 200) # run multiple imputation for indicated maximum iterations and minutes
+  # TODO: max.minutes seems to be not setable via a variable
+  imputedData <- mi(mdf, n.chains = opt$chainQty, n.iter = maxIterations, max.minutes = 200) # run multiple imputation for indicated maximum iterations and minutes
   latestRHat <-Rhats(imputedData)
   
   # calculate and print imputations per minute
@@ -86,5 +93,6 @@ if (isDetailed){
 cat("Writing imputed data to file...")
 now <- Sys.time()
 fileName <- paste0("./results/", format(now, "%Y%m%d%H%M%S-"), "mi-imputation.csv")
+print(fileName)
 write.mi(imputedData, file=fileName, format="csv")
 cat("Done.")
