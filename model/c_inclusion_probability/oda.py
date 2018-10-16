@@ -1,20 +1,13 @@
 import numpy as np
-from numpy.linalg import solve, eigvals, cholesky
+from numpy.linalg import eigvals, cholesky
 from scipy.stats import norm
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 
 
 def solve(a):
-    # using: https://github.com/wch/r-source/blob/HEAD/src/library/base/R/solve.R
-    # TODO: might need more time
-    q,r = np.linalg.qr(a)
-    nc = r.shape[1]
-    nr = r.shape[0]
-    b = np.eye(nc)
-    res = LinearRegression()
-    res.fit(a, b)
-    return res.coef_
+    # https://www.statmethods.net/advstats/matrix.html
+    return np.linalg.inv(a)
 
 
 def oda_probit(xo: pd.DataFrame, zo: pd.DataFrame, niter: int, burnin: int, lam_spec: int=1):
@@ -98,7 +91,7 @@ def oda_probit(xo: pd.DataFrame, zo: pd.DataFrame, niter: int, burnin: int, lam_
             else:                                                                                           #         else {
                 muya = xain[1, ] * np.mean(yo)                                                              #             muya <- xain[, 1] * mean(yo)
                 varya1 = np.dot(xain[1, ], np.transpose(xain[1, ])) / no                                    #             varya1 <- (xain[, 1] %*% t(xain[, 1])) / no
-                varya3 = np.diag(na)                                                                        #             varya3 <- diag(na)
+                varya3 = np.eye(na)                                                                         #             varya3 <- diag(na)
                 varya = (varya1 + varya3) / phi                                                             #             varya <- (varya1 + varya3) / phi
                 ya = np.random.multivariate_normal(muya, varya)                                             #             ya <- mvrnorm(1, muya, varya)
                                                                                                             #         }

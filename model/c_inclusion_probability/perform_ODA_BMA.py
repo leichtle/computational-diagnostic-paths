@@ -42,4 +42,4 @@ if __name__ == "__main__":
     dataMatrix3 = dataMatrix[["ALAT.3","AP.3","ASAT.3","CA.3","CK.3","CREA.3","CRP.3","GGT.3","GL.3","I200_I2519","KA.3","LDH.3","NA.3","TNT.3","UREA.3"]]
     dataMatrix3.columns = ["ALAT","AP","ASAT","CA","CK","CREA","CRP","GGT","GL", "I200_I2519", "KA","LDH","NA.","TNT","UREA"]
 
-    perform_oda(dataMatrix3)
+    perform_oda(dataMatrix1)
