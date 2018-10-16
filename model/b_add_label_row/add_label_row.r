@@ -15,5 +15,5 @@ dataMatrix$I200_I2519<-ifelse(grepl("^I([2-9][0-9][0-9]|1[0-9][0-9][0-9]|2[0-5][
 cat("Writing imputed data with added label column to file...")
 now <- Sys.time()
 fileName <- paste0("./results/", format(now, "%Y%m%d%H%M%S-"), "mi-imputation+label.csv")
-write.csv(dataMatrix, file=fileName)
+write.csv(dataMatrix, file=fileName, row.names=FALSE)
 cat("Done.")
