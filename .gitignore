@@ -1,6 +1,13 @@
+# R
 .Rproj.user
 .Rhistory
-.RData
+*.RData
 .Ruserdata
 
+# python
+*.pyc
 .idea/
+
+# data
+*.csv
+
