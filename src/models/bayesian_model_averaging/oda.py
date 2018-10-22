@@ -5,14 +5,9 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 
 
-def solve(a):
-    # https://www.statmethods.net/advstats/matrix.html
-    return np.linalg.inv(a)
-
-
-def oda_probit(xo: pd.DataFrame, zo: pd.DataFrame, niter: int, burnin: int, lam_spec: int=1):
-    ROW_AXIS = 0
-    COL_AXIS = 1
+def perform_oda_probit(xo: pd.DataFrame, zo: pd.DataFrame, niter: int, burn_in: int, lam_spec: int=1):
+    ROW_AXIS = 0  # row axis constant
+    COL_AXIS = 1  # column axis constant
 
     xo: np.ndarray = xo.values                                                                              # xo <- as.matrix(xo)
     zo: np.ndarray = zo.values                                                                              # zo <- as.vector(zo)
@@ -69,13 +64,13 @@ def oda_probit(xo: pd.DataFrame, zo: pd.DataFrame, niter: int, burnin: int, lam_
                 lamgamma = lam[gamma == 1]                                                                  #             lamgamma <- lam[gamma == 1]
                 gamma_lm = LinearRegression()                                                               #             gamma.lm <- lm(yo ~ xogamma)
                 gamma_lm.fit(xogamma, yo)
-                betaogamma = gamma_lm.coef_[0:]  # TODO                                                     #             betaogamma <- gamma.lm$coefficients[- 1]
+                betaogamma = gamma_lm.coef_[0:]                                                             #             betaogamma <- gamma.lm$coefficients[- 1]
                                                                                                             #             betaogamma <- as.matrix(betaogamma)
                 if sum(gamma) == 1:                                                                         #             if (sum(gamma) == 1) {
-                    sigmatildeogamma = 1 / (xoxogamma + (1/lamgamma))                                      #                 sigmatildeogamma <- 1 / (xoxogamma + (1 / lamgamma))
+                    sigmatildeogamma = 1 / (xoxogamma + (1/lamgamma))                                       #                 sigmatildeogamma <- 1 / (xoxogamma + (1 / lamgamma))
                 else:                                                                                       #             } else
                                                                                                             #             {
-                   sigmatildeogamma = solve(xoxogamma + np.diag(1/lamgamma))  # TODO                        #                 sigmatildeogamma <- solve(xoxogamma + diag(1 / lamgamma))
+                   sigmatildeogamma = np.linalg.inv(xoxogamma + np.diag(1/lamgamma))                        #                 sigmatildeogamma <- solve(xoxogamma + diag(1 / lamgamma))
                                                                                                             #             }
                 betatildegamma = np.dot(np.dot(sigmatildeogamma, xoxogamma), betaogamma)                    #             betatildeogamma <- sigmatildeogamma %*% xoxogamma %*% betaogamma
                 xagamma = xa[:, gamma == 1]                                                                 #             xagamma <- xa[, gamma == 1]
@@ -118,7 +113,7 @@ def oda_probit(xo: pd.DataFrame, zo: pd.DataFrame, niter: int, burnin: int, lam_
                     vbeta = 1 / pbeta                                                                       #                 Vbeta <- 1 / Pbeta
                 else:                                                                                       #             } else {
                     pbeta = phi * (np.diag(lam[gamma == 1]) + xcxc[gamma == 1, :][:, gamma == 1])           #                 Pbeta <- phi * (diag(lam[gamma == 1]) + xcxc[gamma == 1, gamma == 1])
-                    vbeta = solve(pbeta)                                                                    #                 Vbeta <- solve(Pbeta)
+                    vbeta = np.linalg.inv(pbeta)                                                            #                 Vbeta <- solve(Pbeta)
                                                                                                             #             }
                 ebeta = phi * np.dot(np.dot(vbeta, xcxc[gamma == 1, :][:, gamma == 1]), betaolsc[i, 1:][gamma == 1]) #             Ebeta <- phi * as.matrix(Vbeta) %*% xcxc[gamma == 1, gamma == 1] %*% as.matrix(betaolsc[i, - 1][gamma == 1])
 
@@ -153,12 +148,12 @@ def oda_probit(xo: pd.DataFrame, zo: pd.DataFrame, niter: int, burnin: int, lam_
                 print("iteration: ", i)                                                                     #                 print(paste("iter", i, sep = " "))
                                                                                                             #     }
 
-        beta0_hat = np.mean(betaolsc[burnin:, 1])                                                       #     beta0.hat <- mean(betaolsc[- c(1 : burnin), 1])
-        d = round(lamc + 0.001, 10)                                                                     #     d <- round(lamc + 0.001, 10)
-        beta_hat = np.mean(betaolsc[burnin:, 1:] * postincprob[burnin:, ], axis=ROW_AXIS) * (d/(d + lam_spec))                   #     beta.hat <- apply(betaolsc[- c(1 : burnin), - 1] * postincprob[- c(1 : burnin),], 2, mean) * (d / (d + lam.spec))
-        beta_hat = beta_hat / sqrtvar                                                                   #     beta.hat <- beta.hat / sqrtvar
-        beta0_hat = beta0_hat - sum(beta_hat * xomean)                                                  #     beta0.hat <- beta0.hat - sum(beta.hat * xomean)
-        incprob_rb = np.mean(postincprob[burnin:, ], axis=ROW_AXIS)                                     #     incprob.rb <- apply(postincprob[- c(1 : burnin),], 2, mean)
+        beta0_hat = np.mean(betaolsc[burn_in:, 1])                                                          #     beta0.hat <- mean(betaolsc[- c(1 : burnin), 1])
+        d = round(lamc + 0.001, 10)                                                                         #     d <- round(lamc + 0.001, 10)
+        beta_hat = np.mean(betaolsc[burn_in:, 1:] * postincprob[burn_in:, ], axis=ROW_AXIS) * (d / (d + lam_spec))                   #     beta.hat <- apply(betaolsc[- c(1 : burnin), - 1] * postincprob[- c(1 : burnin),], 2, mean) * (d / (d + lam.spec))
+        beta_hat = beta_hat / sqrtvar                                                                       #     beta.hat <- beta.hat / sqrtvar
+        beta0_hat = beta0_hat - sum(beta_hat * xomean)                                                      #     beta0.hat <- beta0.hat - sum(beta.hat * xomean)
+        incprob_rb = np.mean(postincprob[burn_in:, ], axis=ROW_AXIS)                                        #     incprob.rb <- apply(postincprob[- c(1 : burnin),], 2, mean)
         return {
             "betama": [beta0_hat, beta_hat],
             "incprob_rb": incprob_rb,

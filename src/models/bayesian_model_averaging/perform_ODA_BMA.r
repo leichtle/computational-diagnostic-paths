@@ -5,15 +5,15 @@
 library(optparse) # parse script arguments in a pythonic way
 
 source("lib/oda.bma.r")
-if(.Platform$OS.type == "unix") {
-  dyn.load("./lib/callmodelprobs.so")  # Linux/Unix
-} else {
-  dyn.load("./lib/callmodelprobs.dll")  # Windows 
-}
-
-if(!is.loaded("callmodelprobs")){ # make sure it is loaded
-    stop('callmodelprobs is not loaded')
-}
+# if(.Platform$OS.type == "unix") {
+#   dyn.load("./lib/callmodelprobs.so")  # Linux/Unix
+# } else {
+#   dyn.load("./lib/callmodelprobs.dll")  # Windows
+# }
+#
+# if(!is.loaded("callmodelprobs")){ # make sure it is loaded
+#     stop('callmodelprobs is not loaded')
+# }
 
 option_list = list(
     make_option(c("--dataset"),

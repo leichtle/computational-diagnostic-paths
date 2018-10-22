@@ -1,10 +1,9 @@
-
+source("./oda.normal.r")
+source("./oda.studentst.r")
+source("./oda.probit.r")
 
 oda.bma <- function(x,y,niter,burnin,model="lm",prior="Students-t",lambda=1,alpha=1)
   {
-    source("./lib/oda.normal.r")
-    source("./lib/oda.studentst.r")
-    source("./lib/oda.probit.r")
     # Error message
     if (model=="probit" & prior!="normal")
        stop ("ODA for Probit regression is available with normal priors only at this time \n Please re-run with prior=normal")
