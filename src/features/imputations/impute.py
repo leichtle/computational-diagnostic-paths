@@ -13,6 +13,9 @@ import argparse
 import os
 import re
 from sklearn.preprocessing import Imputer
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ImputationType(Enum):
@@ -23,7 +26,7 @@ class ImputationType(Enum):
     MEAN = 4
 
 
-def impute_missing_data(df: pd.DataFrame, imputation_type: ImputationType, exclude_from_imputation=[], **kwargs):
+def impute_missing_data(df: pd.DataFrame, imputation_type: ImputationType, exclude_from_imputation: list=[], **kwargs):
 
     # X is the complete data matrix
     # X_incomplete has the same values as X except a subset have been replace with NaN
@@ -32,6 +35,8 @@ def impute_missing_data(df: pd.DataFrame, imputation_type: ImputationType, exclu
     exclusion_df = df[exclude_from_imputation].copy()
     missing_data_df = df.drop(exclude_from_imputation, axis=1)
     x_incomplete = missing_data_df.values
+
+    logger.info("Performing imputation of type " + imputation_type.name)
 
     if imputation_type == ImputationType.KNN:
         # Use 3 nearest rows which have a feature to fill in each row's missing features
@@ -50,9 +55,13 @@ def impute_missing_data(df: pd.DataFrame, imputation_type: ImputationType, exclu
     else:
         # Model each feature with missing values as a function of other features, and
         # use that estimate for imputation.
-        iteration_qty = 10000
+        iteration_qty = None
         if 'iteration_qty' in kwargs:
             iteration_qty = kwargs['iteration_qty']
+
+        if iteration_qty is None:
+            iteration_qty = 100000
+            logging.error("Iteration qty not set, defaulting to " + str(iteration_qty))
         imputed = IterativeImputer(n_iter=iteration_qty, verbose=True).fit_transform(x_incomplete)
 
     imputed_df = pd.DataFrame(data=imputed, columns=missing_data_df.columns, index=missing_data_df.index)
@@ -71,12 +80,13 @@ if __name__ == "__main__":
     imputation_type = ImputationType[args.imputation_type]
     iteration_qty = args.niter
 
+    # load dataset
     mi_df = pd.read_csv('../../data/raw_myocardial_ischemia.csv', header=0)  # read data from csv
     mi_df = impute_missing_data(mi_df, imputation_type, exclude_from_imputation=["HDIA", "Klasse"], iteration_qty=iteration_qty)
 
     file_name = os.path.splitext(os.path.basename(dataset_path))[0]
 
-    if re.match("\d\d\d\d\d\d\d\d\d\d\d\d", file_name):  # try to find a timestamp with 4 digit year and each 2 digits for month, day, hour, minute, second
+    if re.match("\d\d\d\d\d\d\d\d\d\d\d\d", file_name):  # is no timestamp present? (with 4 digit year and each 2 digits for month, day, hour, minute, second)
         path = 'data/interim/' + file_name + '-imputation.csv'
     else:
         path = 'data/interim/' + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + "_" + file_name + '-imputation.csv'

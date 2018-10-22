@@ -13,8 +13,8 @@ import os
 import re
 
 
-def add_label_row(df: pd.DataFrame):
-    df["I200_I2519"] = np.where(df["HDIA"].str.contains("^I([2-9][0-9][0-9]|1[0-9][0-9][0-9]|2[0-5][0-1][0-9])$"), 1, 0)  # 0,1 encode
+def add_binary_diagnosis_label(df: pd.DataFrame):
+    df["I200_I2519"] = np.where(df["HDIA"].str.contains("^I[2-9][0-9][0-9]|1[0-9][0-9][0-9]|2[0-5][0-1][0-9]$"), 1, 0)  # 0,1 encode diagnosis of myocardial ischemia
     return df
 
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     print("...Done.")
 
     print("Adding label row...")
-    mi_df = add_label_row(mi_df)
+    mi_df = add_binary_diagnosis_label(mi_df)
     print("...Done.")
 
     print("Write dataset to file...")

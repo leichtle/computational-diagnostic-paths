@@ -1,0 +1,1 @@
+from src.features.labels.labels import add_binary_diagnosis_label
