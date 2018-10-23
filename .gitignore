@@ -86,3 +86,6 @@ target/
 .Rhistory
 *.RData
 .Ruserdata
+
+# logs
+traces/*.log
