@@ -36,7 +36,9 @@ def impute_missing_data(df: pd.DataFrame, imputation_type: ImputationType, exclu
     missing_data_df = df.drop(exclude_from_imputation, axis=1)
     x_incomplete = missing_data_df.values
 
-    logger.info("Performing imputation of type " + imputation_type.name)
+    logger.info(str({"message":"Perform imputation of type ",
+                     "imputation_tye": imputation_type.name})
+                )
 
     if imputation_type == ImputationType.KNN:
         # Use 3 nearest rows which have a feature to fill in each row's missing features
@@ -61,7 +63,7 @@ def impute_missing_data(df: pd.DataFrame, imputation_type: ImputationType, exclu
 
         if iteration_qty is None:
             iteration_qty = 100000
-            logging.error("Iteration qty not set, defaulting to " + str(iteration_qty))
+            logging.error(str({"message": "Iteration qty not set, defaulting to " + str(iteration_qty)}))
         imputed = IterativeImputer(n_iter=iteration_qty, verbose=True).fit_transform(x_incomplete)
 
     imputed_df = pd.DataFrame(data=imputed, columns=missing_data_df.columns, index=missing_data_df.index)
