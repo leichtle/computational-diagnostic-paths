@@ -10,5 +10,4 @@
 echo $1
 export PATH=/software/bin:$PATH # append R location to path before running it
 Rscript experiment.r $1
-deactivate
 
