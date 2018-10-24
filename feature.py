@@ -24,20 +24,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Extract features suitable for bayesian variable seection.')
     parser.add_argument('--dataset', type=str, help='The path to the dataset file', required=True)
     parser.add_argument('--csv_separator', type=str, help='The separator of the data columns', default=',')
-    parser.add_argument('--na_drop_threshold', type=float, default=0.5, help='Amount of NA in column for it to be dropped [0;1]')
     parser.add_argument('--diagnosis_code_min', type=int, default=200, help='Lowest ICD code to be considered positive diagnosis.')
     parser.add_argument('--diagnosis_code_max', type=int, default=2519, help='Highest ICD code to be considered positive diagnosis.')
 
     args = parser.parse_args()
     dataset_path = args.dataset
     csv_separator = args.csv_separator
-    na_drop_threshold = args.na_drop_threshold
     diagnosis_code_min = args.diagnosis_code_min
     diagnosis_code_max = args.diagnosis_code_max
 
     logger.info(str({"message": "NEW FEATURE",
-                     "path": dataset_path,
-                     "na_drop_threshold": na_drop_threshold})
+                     "path": dataset_path})
                 )
 
     logger.info(str({"message": "Load dataset",
@@ -48,10 +45,9 @@ if __name__ == "__main__":
     inclusion_labels = {'I' + str(number) for number in range(diagnosis_code_min, diagnosis_code_max)}  # range of ICD10 codes for positive diagnosis
     pipeline = Pipeline([
         ('extract_label', BinaryLabelExtractor(extract_from_column='HDIA', inclusion_labels=inclusion_labels)),
-        ('drop_non_numerical_columns', NonNumericColumnDropper()),
-        ('drop_above_threshold_na_columns', ThresholdingMissingDataColumnDropper(na_drop_threshold=na_drop_threshold))
+        ('drop_non_numerical_columns', NonNumericColumnDropper())
     ])
     mi_df = pipeline.fit_transform(mi_df)
 
     # write dataset to file
-    write_df_to_csv(df=mi_df, store_path='data/interim/', initial_path=dataset_path, file_appendix='_naDropThreshold_' + str(na_drop_threshold + "_label"))
+    write_df_to_csv(df=mi_df, store_path='data/interim/', initial_path=dataset_path, file_appendix="_label")

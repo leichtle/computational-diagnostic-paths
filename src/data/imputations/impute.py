@@ -38,8 +38,8 @@ def impute_missing_data(df: pd.DataFrame, imputation_type: ImputationType, exclu
     missing_data_df = df.drop(exclude_from_imputation, axis=1)
     x_incomplete = missing_data_df.values
 
-    logger.info(str({"message":"Perform imputation of type ",
-                     "imputation_tye": imputation_type.name})
+    logger.info(str({"message": "Perform imputation of type ",
+                     "imputation_type": imputation_type.name})
                 )
 
     if imputation_type == ImputationType.KNN:
@@ -84,6 +84,13 @@ class DataImputer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, x: pd.DataFrame):
+        self.exclude_from_imputation.extend(list(x.select_dtypes(['object'])))  # exclude all non-numericals from imputation
+
+        logger.info(str({"message": "Perform imputation",
+                         "imputation_type": self.imputation_type.name,
+                         "exclude_from_imputation": str(self.exclude_from_imputation),
+                         "iteration_qty": self.kwargs['iteration_qty'] if 'iteration_qty' in self.kwargs else 'N/A'})
+                    )
         df = impute_missing_data(x, imputation_type=self.imputation_type, exclude_from_imputation=self.exclude_from_imputation, **self.kwargs)
         return df
 
