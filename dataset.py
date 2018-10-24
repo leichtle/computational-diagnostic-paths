@@ -26,14 +26,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Prepare dataset for bayesian variable selection.')
     parser.add_argument('--dataset', type=str, help='The path to the dataset file', required=True)
     parser.add_argument('--csv_separator', type=str, help='The separator of the data columns', default=',')
-    parser.add_argument('--na_drop_threshold', type=float, default=0.5, help='Amount of NA in column for it to be dropped [0;1]')
-    parser.add_argument('--imputation_type', type=str, help='The type of imputation to perform', required=True)
-    parser.add_argument('--niter', type=int, default=None, help='The number of iterations to perform, in case an interative method is chosen')
+    parser.add_argument('--skip_na_drop_threshold', action='store_true', help='Skip drop thresholding')
+    parser.add_argument('--na_drop_threshold', type=float, default=0.5, help='Minimum amount of NA in column for it to be dropped [0;1]')
+    parser.add_argument('--skip_imputation', action='store_true', help='Skip imputation')
+    parser.add_argument('--imputation_type', type=str, default='ITERATIVE', help='The type of imputation to perform')
+    parser.add_argument('--niter', type=int, default=1000, help='The number of iterations to perform, in case an interative method is chosen')
 
     args = parser.parse_args()
     dataset_path = args.dataset
     csv_separator = args.csv_separator
+    do_na_drop_threshold = not args.skip_na_drop_threshold
     na_drop_threshold = args.na_drop_threshold
+    do_imputation = not args.skip_imputation
     imputation_type = impute.ImputationType[args.imputation_type]
     iteration_qty = args.niter
 
@@ -50,13 +54,17 @@ if __name__ == "__main__":
     mi_df = pd.read_csv(dataset_path, header=0, sep=csv_separator)  # read data from csv
 
     # prepare pipeline and run it
-    pipeline = Pipeline([
-        ('drop_above_threshold_na_columns', ThresholdingMissingDataColumnDropper(na_drop_threshold=na_drop_threshold)),
-        ('impute_missing_values', DataImputer(imputation_type=imputation_type, iteration_qty=iteration_qty))
-    ])
+    components = []
+    if do_na_drop_threshold:
+        components.append(('drop_above_threshold_na_columns', ThresholdingMissingDataColumnDropper(na_drop_threshold=na_drop_threshold)))
+        file_appendix += '_naDropThreshold_' + str(na_drop_threshold)
+
+    if do_imputation:
+        components.append(('impute_missing_values', DataImputer(imputation_type=imputation_type, iteration_qty=iteration_qty)))
+        file_appendix += '_impType_' + imputation_type.name + '_nIter_' + str(iteration_qty)
+
+    pipeline = Pipeline(components)
     mi_df = pipeline.fit_transform(mi_df)
-    file_appendix += '_naDropThreshold_' + str(na_drop_threshold)
-    file_appendix += '_impType_' + imputation_type.name + '_nIter_' + str(iteration_qty)
 
     # write dataset to file
     write_df_to_csv(df=mi_df, store_path='data/interim/', initial_path=dataset_path, file_appendix=file_appendix)

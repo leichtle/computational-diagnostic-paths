@@ -63,7 +63,7 @@ isNotConverged = TRUE
 while (untilConvergence & isNotConverged) {
   then <- Sys.time()
   # TODO: max.minutes seems to be not setable via a variable
-  imputedData <- mi(mdf, n.chains = opt$chainQty, n.iter = maxIterations, max.minutes = 200) # run multiple imputation for indicated maximum iterations and minutes
+  imputedData <- mi(mdf, n.chains = opt$chainQty, n.iter = maxIterations, max.minutes = 10000) # run multiple imputation for indicated maximum iterations and minutes
   latestRHat <-Rhats(imputedData)
   
   # calculate and print imputations per minute
