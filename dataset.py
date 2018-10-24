@@ -45,12 +45,14 @@ if __name__ == "__main__":
                      "path": dataset_path}))
     mi_df = pd.read_csv(dataset_path, header=0, sep=csv_separator)  # read data from csv
 
+    exclude_from_imputation = list(mi_df.select_dtypes(['object']))  # exclude all non-numericals from imputation
+
     logger.info(str({"message": "Perform imputation",
                      "imputation_type": imputation_type.name,
-                     "exclude_from_imputation": "[\"HDIA\", \"Klasse\"]",
+                     "exclude_from_imputation": str(exclude_from_imputation),
                      "iteration_qty": iteration_qty})
                 )
-    mi_df = DataImputer(imputation_type, exclude_from_imputation=["HDIA", "Klasse"], iteration_qty=iteration_qty).transform(mi_df)
+    mi_df = DataImputer(imputation_type, exclude_from_imputation=exclude_from_imputation, iteration_qty=iteration_qty).transform(mi_df)
     file_appendix += '_impType_' + imputation_type.name + '_nIter_'+str(iteration_qty)
 
     # write dataset to file
