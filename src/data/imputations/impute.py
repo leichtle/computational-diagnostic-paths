@@ -12,6 +12,8 @@ from enum import Enum
 import argparse
 import os
 import re
+
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import Imputer
 import logging
 
@@ -69,6 +71,21 @@ def impute_missing_data(df: pd.DataFrame, imputation_type: ImputationType, exclu
     imputed_df = pd.DataFrame(data=imputed, columns=missing_data_df.columns, index=missing_data_df.index)
     complete_df = pd.concat([exclusion_df, imputed_df], axis=1, sort=False)
     return complete_df
+
+
+class DataImputer(BaseEstimator, TransformerMixin):
+
+    def __init__(self, imputation_type: ImputationType, exclude_from_imputation: list=[], **kwargs):
+        self.imputation_type = imputation_type
+        self.exclude_from_imputation = exclude_from_imputation
+        self.kwargs = kwargs
+
+    def fit(self, x: pd.DataFrame, y: pd.DataFrame=None):
+        return self
+
+    def transform(self, x: pd.DataFrame):
+        df = impute_missing_data(x, imputation_type=self.imputation_type, exclude_from_imputation=self.exclude_from_imputation, **self.kwargs)
+        return df
 
 
 if __name__ == "__main__":

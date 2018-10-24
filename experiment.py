@@ -5,14 +5,13 @@
 Perform bayesian variable selection to obtain inclusion probabilities.
 """
 
-import pandas as pd
-import datetime
 import argparse
-import os
-import re
 import logging
 
-from src.models.bayesian_model_averaging.oda import perform_oda_probit
+import pandas as pd
+
+from src.common.df_csv_writing import write_df_to_csv
+from src.models.bayesian_model_averaging.model import ODAPerformer
 
 logger = logging.getLogger(__name__)
 
@@ -30,46 +29,43 @@ if __name__ == "__main__":
     burn_in_sim = args.burn_in_sim
     lam_spec = args.lam_spec
 
-    logger.info("Loading dataset...")
+    logger.info(str({"message": "NEW EXPERIMENT",
+                     "path": dataset_path,
+                     "na_drop_threshold": iteration_qty,
+                     "burn_in_sim": burn_in_sim,
+                     "lam_spec": lam_spec})
+                )
+
+    logger.info(str({"message": "Load dataset",
+                     "path": dataset_path}))
     mi_df = pd.read_csv(dataset_path, header=0)  # read data from csv
-    logger.info("...Done.")
 
-    label = 'I200_I2519'
+    logger.info("Sanity check:")
+    logger.info(mi_df.shape)
+    logger.info(mi_df.columns)
 
-    # TODO: improve extraction of features by discarding HDIA and Klasse from dataset in add_label_row
-    #feature_names = [column_name for column_name in mi_df.colums if column_name is not label]
-    feature_names = ["ALAT", "AP", "ASAT", "CA", "CK", "CREA", "CRP", "GGT", "GL", "KA", "LDH", "NA.", "TNT", "UREA"]
+    # prepare data for bayesian variable selection
+    label = 'diagnostic_outcome'  # declare label
+    feature_names = [column_name for column_name in list(mi_df) if column_name is not label]  # extract feature names
+    features = mi_df[feature_names]  # extract features
+    labels = mi_df[label]  # extract label
 
     # Calculate oda inclusion probabilities for ICD-10
-    print("Sanity check:")
-    print(mi_df.shape)
-    print(mi_df.columns)
-
-    features = mi_df[feature_names]  # extract features
-    label = mi_df[label]  # extract label
-
-    oda_results = perform_oda_probit(xo=features, zo=label, niter=iteration_qty, burn_in=burn_in_sim, lam_spec=lam_spec)
-
-    print("Results:")
-    print(oda_results["incprob_rb"])
-
-    #print(oda_icd1["betama"])
-    #print(oda_icd1["incprob"])
-    #print(oda_icd1["gamma"])
-    #print(oda_icd1["odds"])
+    oda_results = ODAPerformer(iteration_qty=iteration_qty, burn_in_sim=burn_in_sim, lam_spec=lam_spec).fit_transform(features, labels)
 
     # create a new dataset for inclusion probabilities
     incprobs_df = pd.DataFrame(columns=feature_names)
     incprobs_df.loc[0] = oda_results["incprob_rb"]
 
-    logger.info("Writing dataset to file...")
-    file_name = os.path.splitext(os.path.basename(dataset_path))[0]
+    logger.info(str({"message": "Results",
+                     "inclusion_probabilities": incprobs_df})
+                )
 
-    # prepare dataset store path
-    path = 'data/interim/'
-    if not re.match("\d{14}", file_name):  # try to find a timestamp with 4 digit year and each 2 digits for month, day, hour, minute, second
-        path += datetime.datetime.now().strftime("%Y%m%d%H%M%S") + '_'
-    path += file_name + '_incprobs.csv'
-    logger.info(path)
-    incprobs_df.to_csv(path, index=False)
-    logger.info("...Done.")
+    # logger.info(oda_results["betama"])
+    # logger.info(oda_results["incprob"])
+    # logger.info(oda_results["gamma"])
+    # logger.info(oda_results["odds"])
+
+    # write dataset to file
+    write_df_to_csv(df=incprobs_df, store_path='data/interim/', initial_path=dataset_path, file_appendix='_incprobs')
+

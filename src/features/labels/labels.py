@@ -4,18 +4,32 @@
 """
 Adds a label row to the lab measurements dataset.
 """
+import argparse
+import logging
 
 import numpy as np
 import pandas as pd
-import datetime
-import argparse
-import os
-import re
+from sklearn.base import BaseEstimator, TransformerMixin
+
+from src.common.df_csv_writing import write_df_to_csv
+
+logger = logging.getLogger(__name__)
 
 
-def add_binary_diagnosis_label(df: pd.DataFrame):
-    df["I200_I2519"] = np.where(df["HDIA"].str.contains("^I[2-9][0-9][0-9]|1[0-9][0-9][0-9]|2[0-5][0-1][0-9]$"), 1, 0)  # 0,1 encode diagnosis of myocardial ischemia
-    return df
+class BinaryLabelExtractor(BaseEstimator, TransformerMixin):
+    """Extract binary label from other columns."""
+
+    def __init__(self, extract_from_column: str='', extract_to_column: str='diagnostic_outcome', inclusion_labels: set={}):
+        self.extract_from_column = extract_from_column
+        self.extract_to_column = extract_to_column
+        self.inclusion_labels = inclusion_labels
+
+    def fit(self, x_df: pd.DataFrame, y_df: pd.DataFrame=None):
+        return self
+
+    def transform(self, x_df: pd.DataFrame):
+        x_df[self.extract_to_column] = np.where(x_df[self.extract_from_column].isin(self.inclusion_labels), 1, 0)  # 0,1 encode diagnosis
+        return x_df
 
 
 if __name__ == "__main__":
@@ -26,21 +40,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     dataset_path = args.dataset
 
-    print("Loading dataset...")
+    logger.info("Loading dataset...")
     mi_df = pd.read_csv(dataset_path, header=0)  # read data from csv
-    print("...Done.")
 
-    print("Adding label row...")
-    mi_df = add_binary_diagnosis_label(mi_df)
-    print("...Done.")
+    logger.info("Adding label row...")
+    inclusion_labels = {'I' + str(number) for number in range(200, 2519)}
+    mi_df = BinaryLabelExtractor(extract_from_column='MainDiagnosis', inclusion_labels=inclusion_labels).fit_transform(mi_df)
 
-    print("Write dataset to file...")
-    file_name = os.path.splitext(os.path.basename(dataset_path))[0]
+    # write dataset to file
+    write_df_to_csv(df=mi_df, store_path='data/interim/', initial_path=dataset_path, file_appendix='_label')
 
-    if re.match("\d\d\d\d\d\d\d\d\d\d\d\d", file_name):  # try to find a timestamp with 4 digit year and each 2 digits for month, day, hour, minute, second
-        path = 'data/interim/' + file_name + '+label.csv'
-    else:
-        path = 'data/interim/' + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + "_" + file_name + '+label.csv'
-    print(path)
-    mi_df.to_csv(path, index=False)
-    print("...Done.")

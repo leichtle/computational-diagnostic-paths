@@ -5,13 +5,11 @@
 Perform bayesian variable selection on dataset to calculate inclusion probabilities.
 """
 
-import pandas as pd
 import argparse
-import os
-import re
 
-from src.models.bayesian_model_averaging.oda import perform_oda_probit
+import pandas as pd
 
+from src.models.bayesian_model_averaging.oda_probit import perform_oda_probit
 
 if __name__ == "__main__":
     # configure parser and parse arguments
