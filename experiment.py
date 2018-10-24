@@ -20,11 +20,13 @@ if __name__ == "__main__":
     # configure parser and parse arguments
     parser = argparse.ArgumentParser(description='Perform bayesian variable selection on dataset.')
     parser.add_argument('--dataset', type=str, help='The path to the dataset file', required=True)
+    parser.add_argument('--csv_separator', type=str, help='The separator of the data columns', default=',')
     parser.add_argument('--niter', type=int, default=100000, help='The number of iterations to perform')
     parser.add_argument('--burn_in_sim', type=int, default=500, help='Burn in sim')
     parser.add_argument('--lam_spec', type=float, default=1, help='lam spec')
     args = parser.parse_args()
     dataset_path = args.dataset
+    csv_separator = args.csv_separator
     iteration_qty = args.niter
     burn_in_sim = args.burn_in_sim
     lam_spec = args.lam_spec
@@ -38,7 +40,7 @@ if __name__ == "__main__":
 
     logger.info(str({"message": "Load dataset",
                      "path": dataset_path}))
-    mi_df = pd.read_csv(dataset_path, header=0)  # read data from csv
+    mi_df = pd.read_csv(dataset_path, header=0, sep=csv_separator)  # read data from csv
 
     logger.info("Sanity check:")
     logger.info(mi_df.shape)

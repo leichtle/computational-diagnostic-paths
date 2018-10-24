@@ -23,12 +23,14 @@ if __name__ == "__main__":
     # configure parser and parse arguments
     parser = argparse.ArgumentParser(description='Extract features suitable for bayesian variable seection.')
     parser.add_argument('--dataset', type=str, help='The path to the dataset file', required=True)
+    parser.add_argument('--csv_separator', type=str, help='The separator of the data columns', default=',')
     parser.add_argument('--na_drop_threshold', type=float, default=0.5, help='Amount of NA in column for it to be dropped [0;1]')
     parser.add_argument('--diagnosis_code_min', type=int, default=200, help='Lowest ICD code to be considered positive diagnosis.')
     parser.add_argument('--diagnosis_code_max', type=int, default=2519, help='Highest ICD code to be considered positive diagnosis.')
 
     args = parser.parse_args()
     dataset_path = args.dataset
+    csv_separator = args.csv_separator
     na_drop_threshold = args.na_drop_threshold
     diagnosis_code_min = args.diagnosis_code_min
     diagnosis_code_max = args.diagnosis_code_max
@@ -40,7 +42,7 @@ if __name__ == "__main__":
 
     logger.info(str({"message": "Load dataset",
                      "path": dataset_path}))
-    mi_df = pd.read_csv(dataset_path, header=0)  # read data from csv
+    mi_df = pd.read_csv(dataset_path, header=0, sep=csv_separator)  # read data from csv
 
     # prepare pipeline and run it
     inclusion_labels = {'I' + str(number) for number in range(diagnosis_code_min, diagnosis_code_max)}  # range of ICD10 codes for positive diagnosis

@@ -23,11 +23,13 @@ if __name__ == "__main__":
     # configure parser and parse arguments
     parser = argparse.ArgumentParser(description='Prepare dataset for bayesian variable selection.')
     parser.add_argument('--dataset', type=str, help='The path to the dataset file', required=True)
+    parser.add_argument('--csv_separator', type=str, help='The separator of the data columns', default=',')
     parser.add_argument('--imputation_type', type=str, help='The type of imputation to perform', required=True)
     parser.add_argument('--niter', type=int, default=None, help='The number of iterations to perform, in case an interative method is chosen')
 
     args = parser.parse_args()
     dataset_path = args.dataset
+    csv_separator = args.csv_separator
     imputation_type = impute.ImputationType[args.imputation_type]
     iteration_qty = args.niter
 
@@ -41,7 +43,7 @@ if __name__ == "__main__":
 
     logger.info(str({"message": "Load dataset",
                      "path": dataset_path}))
-    mi_df = pd.read_csv(dataset_path, header=0)  # read data from csv
+    mi_df = pd.read_csv(dataset_path, header=0, sep=csv_separator)  # read data from csv
 
     logger.info(str({"message": "Perform imputation",
                      "imputation_type": imputation_type.name,
