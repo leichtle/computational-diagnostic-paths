@@ -33,22 +33,30 @@ if (is.null(opt$dataset)){  # print and stop script if dataset file path is miss
   print_help(opt_parser)
   stop("Missing dataset file argument")
 }
+datasetPath <-  opt$dataset
+csvSeparator <- opt$csvSeparator
+processingCoreQty <- opt$processingCoreQty
+chainQty <- opt$chainQty
+untilConvergence <- opt$untilConvergence
+rHatsConvergence <- opt$rHatsConvergence
+maxIterations <- opt$maxIterations
+isDetailed <- opt$isDetailed
 
-options(mc.cores = opt$processingCoreQty) # set the number of cores used for imputation
+options(mc.cores = processingCoreQty) # set the number of cores used for imputation
 
 # load data from csv
 cat("Loading data from csv...")
-miData<-read.csv(opt$dataset, sep=opt$csvSeparator, header=TRUE)
+miData<-read.csv(datasetPath, sep=csvSeparator, header=TRUE)
 cat("Done.\n")
 
-if (opt$isDetailed){
+if (isDetailed){
   print("Show raw data before imputation")
   print(miData) # print dataframe for inspection
 }
 
 mdf <- missing_data.frame(miData) # create missing data dataframe
 
-if (opt$isDetailed){
+if (isDetailed){
   print("Inspect raw data for properties:")
   image(mdf) # print an image of missing datapoints
   summary(mdf) # summarize mdf by providing statistics
@@ -67,10 +75,10 @@ mdf <- change(mdf, y = nonNumericColumns, what="type", to = toType) # set HDIA a
 cat("Performing imputation...")
 isNotConverged = TRUE
 
-while (opt$untilConvergence & isNotConverged) {
+while (untilConvergence & isNotConverged) {
   then <- Sys.time()
   # TODO: max.minutes seems to be not setable via a variable
-  imputedData <- mi(mdf, n.chains = opt$chainQty, n.iter = maxIterations, max.minutes = 10000) # run multiple imputation for indicated maximum iterations and minutes
+  imputedData <- mi(mdf, n.chains = chainQty, n.iter = maxIterations, max.minutes = 10000) # run multiple imputation for indicated maximum iterations and minutes
   latestRHat <-Rhats(imputedData)
   
   # calculate and print imputations per minute
@@ -98,8 +106,17 @@ if (isDetailed){
 
 # write imputed data to file with timestamp
 cat("Writing imputed data to file...")
-now <- Sys.time()
-fileName <- paste0("./results/", format(now, "%Y%m%d%H%M%S-"), "mi-imputation.csv")
-print(fileName)
-write.mi(imputedData, file=fileName, format="csv")
+fileName <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(datasetPath))
+
+# prepare dataset store path
+path <- 'data/interim/'
+if(!grepl("[0-9]{14}", fileName)){  # try to find a timestamp with 4 digit year and each 2 digits for month, day, hour, minute, second
+    # write imputed data to file with timestamp
+    cat("Writing imputed data to file...")
+    now <- Sys.time()
+    path <- paste0(path, format(now, "%Y%m%d%H%M%S"), "_")
+}
+path <- paste0(path, fileName, "_impType_MI_nIter_", maxIterations, "_chainQty_", chainQty, "_rHatsConvergence_", rHatsConvergence, ".csv")
+print(path)
+write.mi(imputedData, file=path, format="csv")
 cat("Done.")
