@@ -8,6 +8,8 @@ library(optparse) # parse script arguments in a pythonic way
 option_list = list(
   make_option(c("--dataset"),
               type="character", default=NULL, help="Path to the dataset file", metavar="character"),
+  make_option(c("--csvSeparator"),
+              type="character", default=",", help="Separator for csv columns", metavar="character"),
   make_option(c("--processingCoreQty"),
               type="integer", default=4, help="Number of cores to run imputation on", metavar = "integer"),
   make_option(c("--chainQty"),
@@ -36,7 +38,7 @@ options(mc.cores = opt$processingCoreQty) # set the number of cores used for imp
 
 # load data from csv
 cat("Loading data from csv...")
-miData<-read.csv(opt$dataset, sep=",", header=TRUE)
+miData<-read.csv(opt$dataset, sep=opt$csvSeparator, header=TRUE)
 cat("Done.\n")
 
 if (isDetailed){
@@ -54,13 +56,18 @@ if (isDetailed){
   hist(mdf) # show histogram of columns
 }
 
-# configure and perform imputation
-mdf <- change(mdf, y = c("HDIA", "Klasse"), what="type", to = c("irrelevant", "irrelevant")) # set HDIA and Klasse as irrelevant types which are excluded from the imputation
+# configure irrelevant columns
+is.nonnumeric <- function(x) { !is.numeric(x)}
+nonNumericColumns<- colnames(Filter(is.nonnumeric, miData))
+print(nonNumericColumns)
+toType <-c(rep("irrelevant", length(nonNumericColumns)))
+
+mdf <- change(mdf, y = nonNumericColumns, what="type", to = toType) # set HDIA and Klasse as irrelevant types which are excluded from the imputation
 
 cat("Performing imputation...")
 isNotConverged = TRUE
 
-while (untilConvergence & isNotConverged) {
+while (opt$untilConvergence & isNotConverged) {
   then <- Sys.time()
   # TODO: max.minutes seems to be not setable via a variable
   imputedData <- mi(mdf, n.chains = opt$chainQty, n.iter = maxIterations, max.minutes = 10000) # run multiple imputation for indicated maximum iterations and minutes
