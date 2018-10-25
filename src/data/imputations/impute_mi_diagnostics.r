@@ -41,14 +41,14 @@ cat("Loading data from csv...")
 miData<-read.csv(opt$dataset, sep=opt$csvSeparator, header=TRUE)
 cat("Done.\n")
 
-if (isDetailed){
+if (opt$isDetailed){
   print("Show raw data before imputation")
   print(miData) # print dataframe for inspection
 }
 
 mdf <- missing_data.frame(miData) # create missing data dataframe
 
-if (isDetailed){
+if (opt$isDetailed){
   print("Inspect raw data for properties:")
   image(mdf) # print an image of missing datapoints
   summary(mdf) # summarize mdf by providing statistics
