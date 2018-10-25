@@ -7,6 +7,8 @@ Although they are designed to lead diagnosis along the analytes of highest known
 
 In this paper, we derive Diagnostic Paths from previously collected lab measurements and the resulting diagnoses using an algorithmic framework called Bayesian Model Averaging (BMA).
 
+*This is an abstract in progress. To be continued...*
+
 [//]: # (BMA identifies highly predictive combinations of analytes through)
 
 Project Organization
