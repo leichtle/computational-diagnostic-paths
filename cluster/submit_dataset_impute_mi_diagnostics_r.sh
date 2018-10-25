@@ -9,4 +9,5 @@
 
 echo $1
 export PATH=/software/bin:$PATH # append R location to path before running it
-Rscript ./impute_mi_diagnostics.r --file $1 >> ./traces/r_info.log > 2> ./traces/r_error.log
+Rscript ./src/data/imputations/impute_mi_diagnostics.r $1  # > ./traces/r_info.log 2> ./traces/r_error.log
+
