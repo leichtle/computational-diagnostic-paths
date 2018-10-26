@@ -2,7 +2,7 @@
 #SBATCH -J dataset
 #SBATCH -o cluster/log/%j_dataset_std.log
 #SBATCH -e cluster/log/%j_dataset_err.log
-#SBATCH -t 16:00:00
+#SBATCH -t 700:00:00
 #SBATCH -p nodes
 #SBATCH -A insel
 #SBATCH --mem-per-cpu=180000

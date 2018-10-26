@@ -54,23 +54,20 @@ if (isDetailed){
   print(miData) # print dataframe for inspection
 }
 
-mdf <- missing_data.frame(miData) # create missing data dataframe
+# split data frame into non-numeric and numeric data frames
+is.nonnumeric <- function(x) { !is.numeric(x)}
+nonNumericColumns <- Filter(is.nonnumeric, miData)
+numericColumns <- Filter(is.numeric, miData)
+
+mdf <- missing_data.frame(numericColumns) # create missing data dataframe
 
 if (isDetailed){
-  print("Inspect raw data for properties:")
-  image(mdf) # print an image of missing datapoints
-  summary(mdf) # summarize mdf by providing statistics
-  show(mdf) # show assumptions on the data types of the columns
-  hist(mdf) # show histogram of columns
+    print("Inspect raw data for properties:")
+    image(mdf) # print an image of missing datapoints
+    summary(mdf) # summarize mdf by providing statistics
+    show(mdf) # show assumptions on the data types of the columns
+    hist(mdf) # show histogram of columns
 }
-
-# configure irrelevant columns
-is.nonnumeric <- function(x) { !is.numeric(x)}
-nonNumericColumns<- colnames(Filter(is.nonnumeric, miData))
-print(nonNumericColumns)
-toType <-c(rep("irrelevant", length(nonNumericColumns)))
-
-mdf <- change(mdf, y = nonNumericColumns, what="type", to = toType) # set HDIA and Klasse as irrelevant types which are excluded from the imputation
 
 cat("Performing imputation...")
 isNotConverged = TRUE
@@ -78,8 +75,8 @@ isNotConverged = TRUE
 while (untilConvergence & isNotConverged) {
   then <- Sys.time()
   # TODO: max.minutes seems to be not setable via a variable
-  imputedData <- mi(mdf, n.chains = chainQty, n.iter = maxIterations, max.minutes = 10000) # run multiple imputation for indicated maximum iterations and minutes
-  latestRHat <-Rhats(imputedData)
+  mdf <- mi(mdf, n.chains = chainQty, n.iter = maxIterations, max.minutes = 1000000) # run multiple imputation for indicated maximum iterations and minutes
+  latestRHat <-Rhats(mdf)
   
   # calculate and print imputations per minute
   now <- Sys.time()
@@ -98,11 +95,15 @@ while (untilConvergence & isNotConverged) {
 cat("Done.\n")
 
 cat("Check if enough iterations were performed...")
-round(mipply(imputedData, mean, to.matrix = TRUE), 3)
+round(mipply(mdf, mean, to.matrix = TRUE), 3)
 
 if (isDetailed){
-  plot(imputedData) # plot the match of imputed and observed data (used to debug convergence)
+  plot(mdf) # plot the match of imputed and observed data (used to debug convergence)
 }
+
+imputedData <- complete(mdf)
+
+imputedDataFrame <- cbind(nonNumericColumns, imputedData)  # merge non-numeric and imputed, numeric data together
 
 # write imputed data to file with timestamp
 cat("Writing imputed data to file...")
@@ -118,5 +119,5 @@ if(!grepl("[0-9]{14}", fileName)){  # try to find a timestamp with 4 digit year 
 }
 path <- paste0(path, fileName, "_impType_MI_nIter_", maxIterations, "_chainQty_", chainQty, "_rHatsConvergence_", rHatsConvergence, ".csv")
 print(path)
-write.mi(imputedData, file=path, format="csv")
+write.csv(imputedDataFrame, file=path, row.names = FALSE)
 cat("Done.")
