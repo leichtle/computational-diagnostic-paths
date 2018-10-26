@@ -1,4 +1,4 @@
-Deriving efficient, evidence-based Diagnostic Paths from Past Diagnoses using Bayesian Model Averaging
+Computational Diagnostic Paths: Deriving efficient, evidence-based Diagnostic Paths from Past Diagnoses using Bayesian Model Averaging
 ==============================
 
 Diagnostic Paths constitute the basic guidelines of laboratory diagnostics in an ICD-10-funded hospital environment.
