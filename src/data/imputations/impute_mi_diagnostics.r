@@ -69,14 +69,14 @@ if (isDetailed){
     hist(mdf) # show histogram of columns
 }
 
-cat("Performing imputation...")
-isNotConverged = TRUE
 
+# TODO: max.minutes seems to be not setable via a variable
 mdf <- mi(mdf, n.chains = chainQty, n.iter = 0, max.minutes = 1000000) # initiate mutiple imputation
-
+epoch <- 0
+isNotConverged = TRUE
 while (untilConvergence & isNotConverged) {
+  print(paste0("Performing imputation epoch ", epoch, "..."))
   then <- Sys.time()
-  # TODO: max.minutes seems to be not setable via a variable
   mdf <- mi(mdf, n.iter = maxIterations) # run multiple imputation for indicated maximum iterations and minutes
   latestRHat <-Rhats(mdf)
   
@@ -93,6 +93,10 @@ while (untilConvergence & isNotConverged) {
   if(isNotConverged){
     print("Imputation not converged. Continuing...")
   }
+  else{
+    print("Imputation converged.")
+  }
+  epoch <- epoch + 1
 }
 cat("Done.\n")
 
