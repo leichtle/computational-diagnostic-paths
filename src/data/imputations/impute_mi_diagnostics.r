@@ -12,6 +12,8 @@ option_list = list(
               type="character", default=",", help="Separator for csv columns", metavar="character"),
   make_option(c("--processingCoreQty"),
               type="integer", default=4, help="Number of cores to run imputation on", metavar = "integer"),
+  make_option(c("--normalizedImputation"),
+              type="logical", default=FALSE, help="If data should be normalized before and denormalized after imputation", metavar = "logical"),
   make_option(c("--chainQty"),
               type="integer", default=4, help="Number of separate imputation chains", metavar = "integer"),
   make_option(c("--untilConvergence"),
@@ -36,6 +38,7 @@ if (is.null(opt$dataset)){  # print and stop script if dataset file path is miss
 datasetPath <-  opt$dataset
 csvSeparator <- opt$csvSeparator
 processingCoreQty <- opt$processingCoreQty
+normalizedImputation <- opt$normalizedImputation
 chainQty <- opt$chainQty
 untilConvergence <- opt$untilConvergence
 rHatsConvergence <- opt$rHatsConvergence
@@ -58,6 +61,10 @@ if (isDetailed){
 is.nonnumeric <- function(x) { !is.numeric(x)}
 nonNumericColumns <- Filter(is.nonnumeric, miData)
 numericColumns <- Filter(is.numeric, miData)
+
+if (normalizedImputation){
+  numericColumns <- scale(numericColumns)
+}
 
 mdf <- missing_data.frame(numericColumns) # create missing data dataframe
 
@@ -110,6 +117,10 @@ if (isDetailed){
 }
 
 imputedData <- complete(mdf)
+
+if (normalizedImputation){
+  t(apply(imputedData, 1, function(r)r*attr(numericColumns,'scaled:scale') + attr(numericColumns, 'scaled:center')))
+}
 
 imputedDataFrame <- cbind(nonNumericColumns, imputedData)  # merge non-numeric and imputed, numeric data together
 
