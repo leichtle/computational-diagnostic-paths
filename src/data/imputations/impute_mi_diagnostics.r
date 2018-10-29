@@ -73,8 +73,9 @@ if (isDetailed){
 # TODO: max.minutes seems to be not setable via a variable
 mdf <- mi(mdf, n.chains = chainQty, n.iter = 0, max.minutes = 1000000) # initiate mutiple imputation
 epoch <- 0
-isNotConverged = TRUE
-while (untilConvergence & isNotConverged) {
+isNotConverged <- TRUE
+isFirstRun <- TRUE
+while (isFirstRun | untilConvergence & isNotConverged) {
   print(paste0("Performing imputation epoch ", epoch, "..."))
   then <- Sys.time()
   mdf <- mi(mdf, n.iter = maxIterations) # run multiple imputation for indicated maximum iterations and minutes
@@ -97,6 +98,7 @@ while (untilConvergence & isNotConverged) {
     print("Imputation converged.")
   }
   epoch <- epoch + 1
+  isFirstRun <- FALSE
 }
 cat("Done.\n")
 
