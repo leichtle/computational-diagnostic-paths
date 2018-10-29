@@ -21,7 +21,7 @@ option_list = list(
   make_option(c("--rHatsConvergence"),
               type="double", default=1.1, help="Consider imputation converged if variance_across_chains/variance_within_chain <= rHatsConvergence", metavar = "double"),
   make_option(c("--maxIterations"),
-              type="integer", default=200, help="Maximum iterations of imputations per chain before imputation checks for convergence", metavar = "integer"),
+              type="integer", default=100, help="Maximum iterations of imputations per chain before imputation checks for convergence", metavar = "integer"),
   make_option(c("--isDetailed"),
               type="logical", default=FALSE, help="Perform extra prints and outputs", metavar = "logical")
   
@@ -63,7 +63,12 @@ nonNumericColumns <- Filter(is.nonnumeric, miData)
 numericColumns <- Filter(is.numeric, miData)
 
 if (normalizedImputation){
+  print("Normalize data before imputation...")
   numericColumns <- scale(numericColumns)
+  print("mean coefficients:")
+  print(attr(numericColumns, "scaled:center"))
+  print("variance coefficients:")
+  print(attr(numericColumns, "scaled:scale"))
 }
 
 mdf <- missing_data.frame(numericColumns) # create missing data dataframe
@@ -119,6 +124,7 @@ if (isDetailed){
 imputedData <- complete(mdf)
 
 if (normalizedImputation){
+  print("Denormalize data after imputation...")
   t(apply(imputedData, 1, function(r)r*attr(numericColumns,'scaled:scale') + attr(numericColumns, 'scaled:center')))
 }
 
