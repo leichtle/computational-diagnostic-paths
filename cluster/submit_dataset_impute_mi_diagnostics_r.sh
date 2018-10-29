@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -J dataset
 #SBATCH -o cluster/log/%j_dataset_std.log
-#SBATCH -e cluster/log/%j_dataset_err.log
+#SBATCH -e cluster/log/%j_dataset_std.log
 #SBATCH -t 700:00:00
 #SBATCH -p nodes
 #SBATCH -A insel

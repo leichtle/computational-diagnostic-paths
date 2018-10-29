@@ -72,10 +72,12 @@ if (isDetailed){
 cat("Performing imputation...")
 isNotConverged = TRUE
 
+mdf <- mi(mdf, n.chains = chainQty, n.iter = 0, max.minutes = 1000000) # initiate mutiple imputation
+
 while (untilConvergence & isNotConverged) {
   then <- Sys.time()
   # TODO: max.minutes seems to be not setable via a variable
-  mdf <- mi(mdf, n.chains = chainQty, n.iter = maxIterations, max.minutes = 1000000) # run multiple imputation for indicated maximum iterations and minutes
+  mdf <- mi(mdf, n.iter = maxIterations) # run multiple imputation for indicated maximum iterations and minutes
   latestRHat <-Rhats(mdf)
   
   # calculate and print imputations per minute
