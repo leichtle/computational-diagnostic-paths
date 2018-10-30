@@ -121,18 +121,18 @@ if (isDetailed){
   plot(mdf) # plot the match of imputed and observed data (used to debug convergence)
 }
 
-imputedData <- complete(mdf)
+imputedData <- complete(mdf)[[1]]
 
 if (normalizedImputation){
   print("Denormalize data after imputation...")
-  t(apply(imputedData, 1, function(r)r*attr(numericColumns,'scaled:scale') + attr(numericColumns, 'scaled:center')))
+  imputedData <-t(apply(imputedData, 1, function(r)r*attr(numericColumns,'scaled:scale') + attr(numericColumns, 'scaled:center')))
 }
 
 imputedDataFrame <- cbind(nonNumericColumns, imputedData)  # merge non-numeric and imputed, numeric data together
 
 # write imputed data to file with timestamp
 cat("Writing imputed data to file...")
-fileName <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(datasetPath))
+fileName <- sub(pattern = "(.*?)\\.[a-zA-Z]*$", replacement = "\\1", basename(datasetPath))
 
 # prepare dataset store path
 path <- 'data/interim/'
@@ -142,7 +142,7 @@ if(!grepl("[0-9]{14}", fileName)){  # try to find a timestamp with 4 digit year 
     now <- Sys.time()
     path <- paste0(path, format(now, "%Y%m%d%H%M%S"), "_")
 }
-path <- paste0(path, fileName, "_impType_MI_nIter_", maxIterations, "_chainQty_", chainQty, "_rHatsConvergence_", rHatsConvergence, ".csv")
+path <- paste0(path, fileName, "_impType_MI_nIter_", maxIterations, "_chainQty_", chainQty, "_rHatsConvergence_", rHatsConvergence, "_normImputation_", normalizedImputation , ".csv")
 print(path)
 write.csv(imputedDataFrame, file=path, row.names = FALSE)
 cat("Done.")
