@@ -68,7 +68,7 @@ colnames(incprobsDf) <- featureNames
 incprobsDf[1,] <- odaResults$incprob.rb
 
 cat("Writing dataset to file...")
-fileName <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(datasetPath))
+fileName <- sub(pattern = "(.*?)\\.[a-zA-Z]*$", replacement = "\\1", basename(datasetPath))
 
 # prepare dataset store path
 path <- 'data/interim/'
@@ -78,7 +78,7 @@ if(!grepl("[0-9]{14}", fileName)){  # try to find a timestamp with 4 digit year 
     now <- Sys.time()
     path <- paste0(path, format(now, "%Y%m%d%H%M%S"), "_")
 }
-path <- paste0(path, fileName, "__incprobs.csv")
+path <- paste0(path, fileName, "_incprobs.csv")
 print(path)
 write.csv(incprobsDf, file=path, row.names = FALSE)
 cat("...Done.")
