@@ -9,6 +9,8 @@ source("./src/models/bayesian_model_averaging/oda_bma/oda.bma.r", chdir=TRUE)
 option_list = list(
 make_option(c("--dataset"),
 type="character", default="./data/interim/20140721000003_myocardial_ischemia_16_impType_MI_nIter_20_label.csv", help="Path to the dataset file", metavar="character"),
+make_option(c("--label"),
+type="character", default="diagnostic_outcome", help="Label of the dataset", metavar="character"),
 make_option(c("--niter"),
 type="integer", default=100000, help="The number of iterations to perform", metavar = "integer"),
 make_option(c("--burn_in_sim"),
@@ -28,13 +30,12 @@ datasetPath <- opt$dataset
 iterationQty <- opt$niter
 burnInSim = opt$burn_in_sim
 lamSpec = opt$lam_spec
+label = opt$label
 
 # load data from csv
 cat("Loading data from csv...")
 miData<-read.csv(opt$dataset, sep=",", header=TRUE)
 cat("Done.\n")
-
-label = 'I200_I2519'
 
 # TODO: improve extraction of features by discarding HDIA and Klasse from dataset in add_label_row
 #feature_names = [column_name for column_name in mi_df.colums if column_name is not label]

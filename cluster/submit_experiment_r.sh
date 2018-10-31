@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -J experiment_evidence-based-diagnostic-paths
-#SBATCH -o cluster/log/%j_feature_std.log
-#SBATCH -e cluster/log/%j_feature_err.log
+#SBATCH -o cluster/log/%j_experiment_std.log
+#SBATCH -e cluster/log/%j_experiment_err.log
 #SBATCH -t 08:00:00
 #SBATCH -p nodes
 #SBATCH -A insel
