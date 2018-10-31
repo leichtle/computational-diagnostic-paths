@@ -12,7 +12,7 @@ from sklearn.pipeline import Pipeline
 
 from src.common.df_csv_writing import write_df_to_csv
 from src.common.json_logging import setup_logging
-from src.features.filter_columns.filter_columns import NonNumericColumnDropper, ThresholdingMissingDataColumnDropper
+from src.features.filter_columns.filter_columns import NonNumericColumnDropper
 from src.features.labels.labels import BinaryLabelExtractor
 
 setup_logging("src/common/logging.json")  # setup logger
