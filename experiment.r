@@ -37,20 +37,26 @@ cat("Loading data from csv...")
 miData<-read.csv(opt$dataset, sep=",", header=TRUE)
 cat("Done.\n")
 
-# TODO: improve extraction of features by discarding HDIA and Klasse from dataset in add_label_row
-#feature_names = [column_name for column_name in mi_df.colums if column_name is not label]
-featureNames <- c("ALAT", "AP", "ASAT", "CA", "CK", "CREA", "CRP", "GGT", "GL", "KA", "LDH", "NA.", "TNT", "UREA")
-
 # Calculate oda inclusion probabilities for ICD-10
 cat("Sanity check for dataset:\n") # check if dimensions and names of matrix look sane
 print(dim(miData)) # 3424 15
 print(names(miData))
 print("---------------------")
 
-features <- subset(miData, select=featureNames)  # extract features
-label = miData[label]  # extract label
+# extract feature names
+columnNames <- colnames(miData)
+isNotLabel <- function(x){x != label}
+featureNames = Filter(isNotLabel, columnNames)
 
-odaResults <- odaResult <- oda.bma(x = features, y = label, niter = iterationQty, burnin = burnInSim, lambda = lamSpec, model = "probit", prior = "normal")
+print("Features:")
+print(featureNames)
+print("Label:")
+print(label)
+
+features <- subset(miData, select=featureNames)  # extract features
+labels = miData[label]  # extract label
+
+odaResults <- odaResult <- oda.bma(x = features, y = labels, niter = iterationQty, burnin = burnInSim, lambda = lamSpec, model = "probit", prior = "normal")
 
 print("Results:")
 print(odaResults$incprob.rb)

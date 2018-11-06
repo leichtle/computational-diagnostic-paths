@@ -24,12 +24,15 @@ if __name__ == "__main__":
     parser.add_argument('--niter', type=int, default=100000, help='The number of iterations to perform')
     parser.add_argument('--burn_in_sim', type=int, default=500, help='Burn in sim')
     parser.add_argument('--lam_spec', type=float, default=1, help='lam spec')
+    parser.add_argument('--label', type=str, default='diagnostic_outcome', help='The name of the label column.')
+
     args = parser.parse_args()
     dataset_path = args.dataset
     csv_separator = args.csv_separator
     iteration_qty = args.niter
     burn_in_sim = args.burn_in_sim
     lam_spec = args.lam_spec
+    label = args.label
 
     logger.info(str({"message": "NEW EXPERIMENT",
                      "path": dataset_path,
@@ -47,7 +50,6 @@ if __name__ == "__main__":
     logger.info(mi_df.columns)
 
     # prepare data for bayesian variable selection
-    label = 'diagnostic_outcome'  # declare label
     feature_names = [column_name for column_name in list(mi_df) if column_name is not label]  # extract feature names
     features = mi_df[feature_names]  # extract features
     labels = mi_df[label]  # extract label
