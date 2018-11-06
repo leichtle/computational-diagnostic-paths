@@ -6,25 +6,24 @@ library(mi) # multiple imputation method to complete missing values in datasets
 library(optparse) # parse script arguments in a pythonic way
 
 option_list = list(
-  make_option(c("--dataset"),
+    make_option(c("--dataset"),
               type="character", default=NULL, help="Path to the dataset file", metavar="character"),
-  make_option(c("--csvSeparator"),
+    make_option(c("--csvSeparator"),
               type="character", default=",", help="Separator for csv columns", metavar="character"),
-  make_option(c("--processingCoreQty"),
+    make_option(c("--processingCoreQty"),
               type="integer", default=4, help="Number of cores to run imputation on", metavar = "integer"),
-  make_option(c("--normalizedImputation"),
+    make_option(c("--normalizedImputation"),
               type="logical", default=FALSE, help="If data should be normalized before and denormalized after imputation", metavar = "logical"),
-  make_option(c("--chainQty"),
+    make_option(c("--chainQty"),
               type="integer", default=4, help="Number of separate imputation chains", metavar = "integer"),
-  make_option(c("--untilConvergence"),
+    make_option(c("--untilConvergence"),
               type="logical", default=TRUE, help="If chains should be imputed until convergence", metavar = "logical"),
-  make_option(c("--rHatsConvergence"),
+    make_option(c("--rHatsConvergence"),
               type="double", default=1.1, help="Consider imputation converged if variance_across_chains/variance_within_chain <= rHatsConvergence", metavar = "double"),
-  make_option(c("--maxIterations"),
+    make_option(c("--maxIterations"),
               type="integer", default=100, help="Maximum iterations of imputations per chain before imputation checks for convergence", metavar = "integer"),
-  make_option(c("--isDetailed"),
+    make_option(c("--isDetailed"),
               type="logical", default=FALSE, help="Perform extra prints and outputs", metavar = "logical")
-  
 )
 
 # parse script arguments 
@@ -32,8 +31,8 @@ opt_parser = OptionParser(option_list=option_list)
 opt = parse_args(opt_parser)
 
 if (is.null(opt$dataset)){  # print and stop script if dataset file path is missing
-  print_help(opt_parser)
-  stop("Missing dataset file argument")
+    print_help(opt_parser)
+    stop("Missing dataset file argument")
 }
 datasetPath <-  opt$dataset
 csvSeparator <- opt$csvSeparator
@@ -53,8 +52,8 @@ miData<-read.csv(datasetPath, sep=csvSeparator, header=TRUE)
 cat("Done.\n")
 
 if (isDetailed){
-  print("Show raw data before imputation")
-  print(miData) # print dataframe for inspection
+    print("Show raw data before imputation")
+    print(miData) # print dataframe for inspection
 }
 
 # split data frame into non-numeric and numeric data frames
@@ -63,12 +62,12 @@ nonNumericColumns <- Filter(is.nonnumeric, miData)
 numericColumns <- Filter(is.numeric, miData)
 
 if (normalizedImputation){
-  print("Normalize data before imputation...")
-  numericColumns <- scale(numericColumns)
-  print("mean coefficients:")
-  print(attr(numericColumns, "scaled:center"))
-  print("variance coefficients:")
-  print(attr(numericColumns, "scaled:scale"))
+    print("Normalize data before imputation...")
+    numericColumns <- scale(numericColumns)
+    print("mean coefficients:")
+    print(attr(numericColumns, "scaled:center"))
+    print("variance coefficients:")
+    print(attr(numericColumns, "scaled:scale"))
 }
 
 mdf <- missing_data.frame(numericColumns) # create missing data dataframe
@@ -88,29 +87,29 @@ epoch <- 0
 isNotConverged <- TRUE
 isFirstRun <- TRUE
 while (isFirstRun | untilConvergence & isNotConverged) {
-  print(paste0("Performing imputation epoch ", epoch, "..."))
-  then <- Sys.time()
-  mdf <- mi(mdf, n.iter = maxIterations) # run multiple imputation for indicated maximum iterations and minutes
-  latestRHat <-Rhats(mdf)
-  
-  # calculate and print imputations per minute
-  now <- Sys.time()
-  diff <- as.numeric(difftime(now, then, units="secs"))
-  
-  cat("Imputation speed:")
-  cat(maxIterations/diff*60)
-  print("/min")
-  print("Rhat to measure convergence of imputation (should be < 1.1):")
-  print(latestRHat)
-  isNotConverged <- any(latestRHat > rHatsConvergence)
-  if(isNotConverged){
-    print("Imputation not converged. Continuing...")
-  }
-  else{
-    print("Imputation converged.")
-  }
-  epoch <- epoch + 1
-  isFirstRun <- FALSE
+    print(paste0("Performing imputation epoch ", epoch, "..."))
+    then <- Sys.time()
+    mdf <- mi(mdf, n.iter = maxIterations) # run multiple imputation for indicated maximum iterations and minutes
+    latestRHat <-Rhats(mdf)
+
+    # calculate and print imputations per minute
+    now <- Sys.time()
+    diff <- as.numeric(difftime(now, then, units="secs"))
+
+    cat("Imputation speed:")
+    cat(maxIterations/diff*60)
+    print("/min")
+    print("Rhat to measure convergence of imputation (should be < 1.1):")
+    print(latestRHat)
+    isNotConverged <- any(latestRHat > rHatsConvergence)
+    if(isNotConverged){
+      print("Imputation not converged. Continuing...")
+    }
+    else{
+      print("Imputation converged.")
+    }
+    epoch <- epoch + 1
+    isFirstRun <- FALSE
 }
 cat("Done.\n")
 
@@ -124,8 +123,8 @@ if (isDetailed){
 imputedData <- complete(mdf)[[1]]
 
 if (normalizedImputation){
-  print("Denormalize data after imputation...")
-  imputedData <-t(apply(imputedData, 1, function(r)r*attr(numericColumns,'scaled:scale') + attr(numericColumns, 'scaled:center')))
+    print("Denormalize data after imputation...")
+    imputedData <-t(apply(imputedData, 1, function(r)r*attr(numericColumns,'scaled:scale') + attr(numericColumns, 'scaled:center')))
 }
 
 imputedDataFrame <- cbind(nonNumericColumns, imputedData)  # merge non-numeric and imputed, numeric data together
