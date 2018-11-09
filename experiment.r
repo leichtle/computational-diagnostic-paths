@@ -25,18 +25,17 @@ optParser <- OptionParser(option_list=optionList)
 opt <- parse_args(optParser)
 
 if (is.null(opt$dataset)){  # print and stop script if dataset file path is missing
-print_help(optParser)
-stop("Missing dataset file argument")
+    print_help(optParser)
+    stop("Missing dataset file argument")
 }
 datasetPath <- opt$dataset
 iterationQty <- opt$niter
 burnInSim <- opt$burnInSim
 lamSpec <- opt$lamSpec
 label <- opt$label
-if(is.null(opt$appendix)){
+if (is.null(opt$appendix)){
     appendix <- ""
-}
-else{
+} else {
     appendix <- paste0("_", opt$appendix)
 }
 
