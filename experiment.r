@@ -6,31 +6,39 @@ library(optparse) # parse script arguments in a pythonic way
 source("./src/models/bayesian_model_averaging/oda_bma/oda.bma.r", chdir=TRUE)
 
 # configure parser and parse arguments
-option_list = list(
+optionList = list(
 make_option(c("--dataset"),
 type="character", default="./data/interim/20140721000003_myocardial_ischemia_16_impType_MI_nIter_20_label.csv", help="Path to the dataset file", metavar="character"),
 make_option(c("--label"),
 type="character", default="diagnostic_outcome", help="Label of the dataset", metavar="character"),
 make_option(c("--niter"),
-type="integer", default=100000, help="The number of iterations to perform", metavar = "integer"),
-make_option(c("--burn_in_sim"),
-type="integer", default=500, help="Burn in sim", metavar = "integer"),
-make_option(c("--lam_spec"),
-type="double", default=1, help="lam spec", metavar = "double"))
+type="integer", default=1000, help="The number of iterations to perform", metavar = "integer"),
+make_option(c("--burnInSim"),
+type="integer", default=500, help="The number of iterations we discard to tune the initial probabilities (burn-in)", metavar = "integer"),
+make_option(c("--lamSpec"),
+type="double", default=1, help="lam spec", metavar = "double"),
+make_option(c("--appendix"),
+type="integer", help="Optional repetition id of the experiment to show convergence", metavar = "character"))
 
 # parse script arguments
-opt_parser = OptionParser(option_list=option_list)
-opt = parse_args(opt_parser)
+optParser <- OptionParser(option_list=optionList)
+opt <- parse_args(optParser)
 
 if (is.null(opt$dataset)){  # print and stop script if dataset file path is missing
-print_help(opt_parser)
+print_help(optParser)
 stop("Missing dataset file argument")
 }
 datasetPath <- opt$dataset
 iterationQty <- opt$niter
-burnInSim = opt$burn_in_sim
-lamSpec = opt$lam_spec
-label = opt$label
+burnInSim <- opt$burnInSim
+lamSpec <- opt$lamSpec
+label <- opt$label
+if(is.null(opt$appendix)){
+    appendix <- ""
+}
+else{
+    appendix <- paste0("_", opt$appendix)
+}
 
 # load data from csv
 cat("Loading data from csv...")
@@ -46,7 +54,7 @@ print("---------------------")
 # extract feature names
 columnNames <- colnames(miData)
 isNotLabel <- function(x){x != label}
-featureNames = Filter(isNotLabel, columnNames)
+featureNames <- Filter(isNotLabel, columnNames)
 
 print("Features:")
 print(featureNames)
@@ -54,9 +62,9 @@ print("Label:")
 print(label)
 
 features <- subset(miData, select=featureNames)  # extract features
-labels = miData[label]  # extract label
+labels <- miData[label]  # extract label
 
-odaResults <- odaResult <- oda.bma(x = features, y = labels, niter = iterationQty, burnin = burnInSim, lambda = lamSpec, model = "probit", prior = "normal")
+odaResults <- oda.bma(x = features, y = labels, niter = iterationQty, burnin = burnInSim, lambda = lamSpec, model = "probit", prior = "normal")
 
 print("Results:")
 print(odaResults$incprob.rb)
@@ -85,7 +93,7 @@ if(!grepl("[0-9]{14}", fileName)){  # try to find a timestamp with 4 digit year 
     now <- Sys.time()
     path <- paste0(path, format(now, "%Y%m%d%H%M%S"), "_")
 }
-path <- paste0(path, fileName, "_incprobs.csv")
+path <- paste0(path, fileName, "_incprobs", appendix,".csv")
 print(path)
 write.csv(incprobsDf, file=path, row.names = FALSE)
 cat("...Done.")
