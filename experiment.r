@@ -18,7 +18,7 @@ type="integer", default=500, help="The number of iterations we discard to tune t
 make_option(c("--lamSpec"),
 type="double", default=1, help="lam spec", metavar = "double"),
 make_option(c("--appendix"),
-type="integer", help="Optional repetition id of the experiment to show convergence", metavar = "character"))
+type="character", help="Optional repetition id of the experiment to show convergence", metavar = "character"))
 
 # parse script arguments
 optParser <- OptionParser(option_list=optionList)
