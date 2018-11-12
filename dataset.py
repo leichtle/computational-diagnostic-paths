@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', type=str, help='The path to the dataset file', required=True)
     parser.add_argument('--csv_separator', type=str, help='The separator of the data columns', default=',')
     parser.add_argument('--skip_na_drop_threshold', action='store_true', help='Skip drop thresholding')
-    parser.add_argument('--na_drop_threshold', type=float, default=0.5, help='Minimum amount of NA in column for it to be dropped [0;1]')
+    parser.add_argument('--na_drop_threshold', type=float, default=1.0, help='Minimum amount of NA in column for it to be dropped [0;1]')
     parser.add_argument('--skip_imputation', action='store_true', help='Skip imputation')
     parser.add_argument('--imputation_type', type=str, default='ITERATIVE', help='The type of imputation to perform')
     parser.add_argument('--niter', type=int, default=1000, help='The number of iterations to perform, in case an interative method is chosen')
