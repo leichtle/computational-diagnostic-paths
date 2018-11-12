@@ -2,7 +2,7 @@
 #SBATCH -J experiment_evidence-based-diagnostic-paths
 #SBATCH -o cluster/log/%j_experiment_std.log
 #SBATCH -e cluster/log/%j_experiment_err.log
-#SBATCH -t 08:00:00
+#SBATCH -t 700:00:00
 #SBATCH -p nodes
 #SBATCH -A insel
 #SBATCH --mem-per-cpu=180000
