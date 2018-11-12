@@ -12,5 +12,5 @@ class ThresholdingMissingDataColumnDropper(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, x_df: pd.DataFrame):
-        max_number_of_nans = self.na_drop_threshold * x_df.shape[0]
-        return x_df.loc[:, (x_df.isnull().sum(axis=0) <= max_number_of_nans)]
+        nan_qty_column_drop_threshold = self.na_drop_threshold * x_df.shape[0]
+        return x_df.loc[:, (x_df.isnull().sum(axis=0) <= nan_qty_column_drop_threshold)]

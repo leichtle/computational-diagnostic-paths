@@ -7,7 +7,7 @@ library(optparse) # parse script arguments in a pythonic way
 
 option_list = list(
     make_option(c("--dataset"),
-              type="character", default=NULL, help="Path to the dataset file", metavar="character"),
+              type="character", default="./data/raw/myocardial_ischemia_16.csv ", help="Path to the dataset file", metavar="character"),
     make_option(c("--csvSeparator"),
               type="character", default=",", help="Separator for csv columns", metavar="character"),
     make_option(c("--processingCoreQty"),
@@ -21,7 +21,7 @@ option_list = list(
     make_option(c("--rHatsConvergence"),
               type="double", default=1.1, help="Consider imputation converged if variance_across_chains/variance_within_chain <= rHatsConvergence", metavar = "double"),
     make_option(c("--maxIterations"),
-              type="integer", default=100, help="Maximum iterations of imputations per chain before imputation checks for convergence", metavar = "integer"),
+              type="integer", default=100, help="Total iterations of imputations per chain before imputation checks for convergence or finishes", metavar = "integer"),
     make_option(c("--isDetailed"),
               type="logical", default=FALSE, help="Perform extra prints and outputs", metavar = "logical")
 )
@@ -30,10 +30,6 @@ option_list = list(
 opt_parser = OptionParser(option_list=option_list)
 opt = parse_args(opt_parser)
 
-if (is.null(opt$dataset)){  # print and stop script if dataset file path is missing
-    print_help(opt_parser)
-    stop("Missing dataset file argument")
-}
 datasetPath <-  opt$dataset
 csvSeparator <- opt$csvSeparator
 processingCoreQty <- opt$processingCoreQty
@@ -120,7 +116,7 @@ if (isDetailed){
   plot(mdf) # plot the match of imputed and observed data (used to debug convergence)
 }
 
-imputedData <- complete(mdf)[[1]]
+imputedData <- subset(complete(mdf, m=1), select=colnames(numericColumns)) # m=1 just takes the first imputation chain
 
 if (normalizedImputation){
     print("Denormalize data after imputation...")
