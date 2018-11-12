@@ -13,12 +13,12 @@ make_option(c("--label"),
 type="character", default="diagnostic_outcome", help="Label of the dataset", metavar="character"),
 make_option(c("--niter"),
 type="integer", default=1000, help="The number of iterations to perform", metavar = "integer"),
-make_option(c("--burnInSim"),
+make_option(c("--burnIn"),
 type="integer", default=500, help="The number of iterations we discard to tune the initial probabilities (burn-in)", metavar = "integer"),
-make_option(c("--lamSpec"),
-type="double", default=1, help="lam spec", metavar = "double"),
+make_option(c("--lambda"),
+type="double", default=1, help="lambda", metavar = "double"),
 make_option(c("--appendix"),
-type="character", help="Optional repetition id of the experiment to show convergence", metavar = "character"))
+type="character", help="Optional repetition id of the experiment to explore convergence across multiple chains", metavar = "character"))
 
 # parse script arguments
 optParser <- OptionParser(option_list=optionList)
@@ -30,8 +30,8 @@ if (is.null(opt$dataset)){  # print and stop script if dataset file path is miss
 }
 datasetPath <- opt$dataset
 iterationQty <- opt$niter
-burnInSim <- opt$burnInSim
-lamSpec <- opt$lamSpec
+burnIn <- opt$burnIn
+lambda <- opt$lambda
 label <- opt$label
 if (is.null(opt$appendix)){
     appendix <- ""
@@ -63,23 +63,21 @@ print(label)
 features <- subset(miData, select=featureNames)  # extract features
 labels <- miData[label]  # extract label
 
-odaResults <- oda.bma(x = features, y = labels, niter = iterationQty, burnin = burnInSim, lambda = lamSpec, model = "probit", prior = "normal")
+odaResults <- oda.bma(x = features, y = labels, niter = iterationQty, burnin = burnIn, lambda = lambda, model = "probit", prior = "normal")
 
-print("Results:")
-print(odaResults$incprob.rb)
-print(odaResults)
-print(featureNames)
-print(odaResults$names)
-
-# print(odaResult$betabma)
-# print(odaResult$incprob)
-# print(odaResult$gamma)
-# print(odaResult$odds)
+# print(odaResults$incprob.rb)
+# print(odaResults$betabma)
+# print(odaResults$incprob)
+# print(odaResults$gamma)
+# print(odaResults$odds)
 
 # create a new dataset for inclusion probabilities
 incprobsDf <- data.frame(matrix(ncol = length(featureNames), nrow = 0))
 colnames(incprobsDf) <- featureNames
 incprobsDf[1,] <- odaResults$incprob.rb
+
+print("Results:")
+print(incprobsDf)
 
 cat("Writing dataset to file...")
 fileName <- sub(pattern = "(.*?)\\.[a-zA-Z]*$", replacement = "\\1", basename(datasetPath))
@@ -92,7 +90,7 @@ if(!grepl("[0-9]{14}", fileName)){  # try to find a timestamp with 4 digit year 
     now <- Sys.time()
     path <- paste0(path, format(now, "%Y%m%d%H%M%S"), "_")
 }
-path <- paste0(path, fileName, "_incprobs", appendix,".csv")
+path <- paste0(path, fileName, "_niter", iterationQty, "_burnIn", burnIn, "_lambda", lambda, "_incprobs", appendix, ".csv")
 print(path)
 write.csv(incprobsDf, file=path, row.names = FALSE)
 cat("...Done.")
