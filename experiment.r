@@ -90,7 +90,7 @@ if(!grepl("[0-9]{14}", fileName)){  # try to find a timestamp with 4 digit year 
     now <- Sys.time()
     path <- paste0(path, format(now, "%Y%m%d%H%M%S"), "_")
 }
-path <- paste0(path, fileName, "_niter", iterationQty, "_burnIn", burnIn, "_lambda", lambda, "_incprobs", appendix, ".csv")
+path <- paste0(path, fileName, "_niter_", iterationQty, "_burnIn_", burnIn, "_lambda_", lambda, "_incprobs", appendix, ".csv")
 print(path)
 write.csv(incprobsDf, file=path, row.names = FALSE)
 cat("...Done.")
