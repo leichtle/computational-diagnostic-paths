@@ -12,11 +12,13 @@ from sklearn.pipeline import Pipeline
 
 from src.common.df_csv_writing import write_df_to_csv
 from src.common.json_logging import setup_logging
+from src.features.diagnoses.diagnoses import MissingDiagnosisRowDropper
 from src.features.filter_columns.filter_columns import NonNumericColumnDropper
 from src.features.labels.labels import BinaryLabelExtractor
 
 setup_logging("src/common/logging.json")  # setup logger
 logger = logging.getLogger(__name__)
+
 
 if __name__ == "__main__":
 
@@ -24,12 +26,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Extract features suitable for bayesian variable seection.')
     parser.add_argument('--dataset', type=str, help='The path to the dataset file', required=True)
     parser.add_argument('--csv_separator', type=str, help='The separator of the data columns', default=',')
+    parser.add_argument('--diagnosis_col_name', type=str, default='HDIA', help='The name of the diagnosis column in the data frame.')
     parser.add_argument('--diagnosis_code_min', type=int, default=200, help='Lowest ICD code to be considered positive diagnosis.')
     parser.add_argument('--diagnosis_code_max', type=int, default=2519, help='Highest ICD code to be considered positive diagnosis.')
 
     args = parser.parse_args()
     dataset_path = args.dataset
     csv_separator = args.csv_separator
+    diagnosis_col_name = args.diagnosis_col_name
     diagnosis_code_min = args.diagnosis_code_min
     diagnosis_code_max = args.diagnosis_code_max
 
@@ -44,7 +48,8 @@ if __name__ == "__main__":
     # prepare pipeline and run it
     inclusion_labels = {'I' + str(number) for number in range(diagnosis_code_min, diagnosis_code_max)}  # range of ICD10 codes for positive diagnosis
     pipeline = Pipeline([
-        ('extract_label', BinaryLabelExtractor(extract_from_column='HDIA', inclusion_labels=inclusion_labels)),
+        ('drop_rows_with_diagnosis', MissingDiagnosisRowDropper(diagnosis_col_name=diagnosis_col_name)),
+        ('extract_label', BinaryLabelExtractor(extract_from_column=diagnosis_col_name, inclusion_labels=inclusion_labels)),
         ('drop_non_numerical_columns', NonNumericColumnDropper())
     ])
     mi_df = pipeline.fit_transform(mi_df)
