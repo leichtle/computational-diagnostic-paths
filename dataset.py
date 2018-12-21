@@ -15,7 +15,7 @@ from src.common.df_csv_writing import write_df_to_csv
 from src.common.json_logging import setup_logging
 from src.data.imputations import impute
 from src.data.imputations.impute import DataImputer
-from src.data.na_thresholding.transformer import ThresholdingMissingDataColumnDropper
+from src.data.na_thresholding.transformer import ThresholdingMissingDataColumnDropper, ValuePresenceRowFilter
 
 setup_logging("src/common/logging.json")  # setup logger
 logger = logging.getLogger(__name__)
@@ -25,7 +25,8 @@ if __name__ == "__main__":
     # configure parser and parse arguments
     parser = argparse.ArgumentParser(description='Prepare dataset for bayesian variable selection.')
     parser.add_argument('--dataset', type=str, help='The path to the dataset file', required=True)
-    parser.add_argument('--csv_separator', type=str, help='The separator of the data columns', default=',')
+    parser.add_argument('--csv_separator', type=str, default=',', help='The separator of the data columns')
+    parser.add_argument('--diagnosis_indicator_column', action='append', help='Typical measurements done when evaluating the plausibility of a certain diagnosis. Repeat flag to provide multiple columns')
     parser.add_argument('--skip_na_drop_threshold', action='store_true', help='Skip drop thresholding')
     parser.add_argument('--na_drop_threshold', type=float, default=1.0, help='Minimum amount of NA in column for it to be dropped [0;1]')
     parser.add_argument('--skip_imputation', action='store_true', help='Skip imputation')
@@ -35,6 +36,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     dataset_path = args.dataset
     csv_separator = args.csv_separator
+    indicator_columns = args.diagnosis_indicator_column
     do_na_drop_threshold = not args.skip_na_drop_threshold
     na_drop_threshold = args.na_drop_threshold
     do_imputation = not args.skip_imputation
@@ -58,6 +60,10 @@ if __name__ == "__main__":
     if do_na_drop_threshold:
         components.append(('drop_above_threshold_na_columns', ThresholdingMissingDataColumnDropper(na_drop_threshold=na_drop_threshold)))
         file_appendix += '_naDropThreshold_' + str(na_drop_threshold)
+
+    if indicator_columns is not []:
+        components.append(('filter_by_indicator_columns', ValuePresenceRowFilter(required_columns=indicator_columns)))
+        file_appendix += '_indicatorColumns_' + str(indicator_columns)
 
     if do_imputation:
         components.append(('impute_missing_values', DataImputer(imputation_type=imputation_type, iteration_qty=iteration_qty)))
