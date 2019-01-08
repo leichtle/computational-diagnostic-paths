@@ -1,15 +1,12 @@
-import idsc
-from idsc.cdwh import common, queries
 import pandas as pd
-import numpy as np
 
 if __name__ == "__main__":
 
-    rows_processed = 0
-    next_rows_threshold = 0
-
     lab_data_df = None
     chunk_size = 100000
+
+    rows_processed = 0
+    next_rows_threshold = 0
     # read lab values of cases
     for chunk in pd.read_csv("20181218_case_lab_data.csv", chunksize=chunk_size, delimiter=';', encoding='Latin-1'):  # Time: O(chunk_qty * chunksize), Size: O(1)
         lab_values_per_case = chunk.pivot_table("WERT", ["CASEPSEUDOID"], "ANALYSE")
@@ -54,17 +51,29 @@ if __name__ == "__main__":
             next_rows_threshold += chunk_size
 
     case_diagnosis_df = None
+    rows_processed = 0
+    next_rows_threshold = 0
     # read diagnoses of cases
     for chunk in pd.read_csv("20181218_case_diagnosis_data.csv", chunksize=chunk_size, delimiter=';'):  # Time: O(chunk_qty * chunksize), Size: O(1)
-        diagnosis_list_df = chunk.groupby("CASEPSEUDOID")["DKEY"].apply(list)
+        diagnosis_list_df = chunk.groupby("CASEPSEUDOID")["DKEY1"].apply(list).to_frame()
 
         # merge new diagnoses with old ones
         if case_diagnosis_df is None:
             case_diagnosis_df = diagnosis_list_df
         else:
             case_diagnosis_df = pd.merge(case_diagnosis_df, diagnosis_list_df, on='CASEPSEUDOID', sort=False, how='outer')
-            case_diagnosis_df['DKEY'] = case_diagnosis_df['DKEY_x'] + case_diagnosis_df['DKEY_y']
-            case_diagnosis_df = case_diagnosis_df.drop(['DKEY_x', 'DKEY_y'], axis=1)
+
+            # fill Nan with empty lists
+            case_diagnosis_df["DKEY1_x"] = case_diagnosis_df["DKEY1_x"].apply(lambda d: d if isinstance(d, list) else [])
+            case_diagnosis_df["DKEY1_y"] = case_diagnosis_df["DKEY1_y"].apply(lambda d: d if isinstance(d, list) else [])
+
+            case_diagnosis_df['DKEY1'] = case_diagnosis_df['DKEY1_x'] + case_diagnosis_df['DKEY1_y']    # combine
+            case_diagnosis_df = case_diagnosis_df.drop(['DKEY1_x', 'DKEY1_y'], axis=1)
+
+    rows_processed += chunk_size
+    if rows_processed > next_rows_threshold:
+        print(str(next_rows_threshold) + " rows processed.")
+        next_rows_threshold += chunk_size
 
     # join panda dfs
     case_lab_diagnosis_df = lab_data_df.join(case_diagnosis_df, on="CASEPSEUDOID", how='inner')
