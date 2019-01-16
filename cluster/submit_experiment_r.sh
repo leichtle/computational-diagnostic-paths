@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J experiment_evidence-based-diagnostic-paths
+#SBATCH -J cdp_experiment
 #SBATCH -o cluster/log/%j_experiment_std.log
 #SBATCH -e cluster/log/%j_experiment_err.log
 #SBATCH -t 700:00:00

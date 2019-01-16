@@ -43,7 +43,7 @@ if __name__ == "__main__":
     imputation_type = impute.ImputationType[args.imputation_type]
     iteration_qty = args.niter
 
-    logger.info(str({"message": "NEW DATASET",
+    logger.info(str({"message": "PREPARE NEW DATASET",
                      "path": dataset_path,
                      "imputation_type": imputation_type,
                      "iteration_qty": iteration_qty})
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         file_appendix += '_impType_' + imputation_type.name + '_nIter_' + str(iteration_qty)
 
     pipeline = Pipeline(components)
-    mi_df = pipeline.fit_transform(mi_df)
+    mi_df = pipeline.fit_transform(mi_df)  # apply pipeline
 
     # write dataset to file
     write_df_to_csv(df=mi_df, store_path='data/interim/', initial_path=dataset_path, file_appendix=file_appendix)

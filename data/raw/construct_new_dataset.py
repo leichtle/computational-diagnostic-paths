@@ -1,60 +1,52 @@
 import pandas as pd
 
+import argparse
+import logging
+
+from src.common.json_logging import setup_logging
+
+setup_logging("src/common/logging.json")  # setup logger
+logger = logging.getLogger(__name__)
+
 if __name__ == "__main__":
 
-    lab_data_df = None
-    chunk_size = 100000
+    # configure parser and parse arguments
+    parser = argparse.ArgumentParser(description='Prepare dataset for bayesian variable selection.')
+    parser.add_argument('--case_lab_dataset', type=str, help='The path to the lab values per case dataset file pulled from the db using pull_new_dataset.py', required=True)
+    parser.add_argument('--case_diagnosis_dataset', type=str, help='The path to the diagnoses per case dataset file pulled from the db using pull_new_dataset.py', required=True)
+    parser.add_argument('--chunksize', type=int, default=100000, help='The chunk size to process in order to not overload the memory')
 
+    args = parser.parse_args()
+    case_lab_data_file = args.case_lab_dataset
+    case_diagnosis_data_file = args.case_diagnosis_dataset
+    chunk_size = args.chunksize
+
+    # read lab values of cases and pivot them into a values per case form
+    lab_data_df = None
     rows_processed = 0
     next_rows_threshold = 0
-    # read lab values of cases
-    for chunk in pd.read_csv("20181218_case_lab_data.csv", chunksize=chunk_size, delimiter=';', encoding='Latin-1'):  # Time: O(chunk_qty * chunksize), Size: O(1)
-        lab_values_per_case = chunk.pivot_table("WERT", ["CASEPSEUDOID"], "ANALYSE")
-        #TODO: Check how many different measuring units are used across different columns
 
-        if lab_data_df is None:
+    for chunk in pd.read_csv(case_lab_data_file, chunksize=chunk_size, delimiter=';', encoding='Latin-1'):  # Time: O(chunk_qty * chunksize), Size: O(1)
+        lab_values_per_case = chunk.pivot_table("WERT", ["CASEPSEUDOID"], "ANALYSE") # pivot into values per case form
+        #TODO: Check how many different measuring units are used across different columns (There mostly one, rarely two, considered noise)
+
+        if lab_data_df is None:                                             # if this is the first pivotation chunk, keep it as is
             lab_data_df = lab_values_per_case
-        else:
+        else:                                                               # else, combine the former table with the new chunk
             lab_data_df = lab_data_df.combine_first(lab_values_per_case)
-        # for _, row in chunk.iterrows():
-        #     case_id = row[0]  # get case id of row
-        #
-        #     # add case if not existing
-        #     if case_id not in case_value_map:
-        #         case_value_map[case_id] = {}
-        #
-        #     # get lab value id and the value itself
-        #     lab_value = row[2]  # lab value
-        #     lab_value_id = row[3]  # analysis type id
-        #
-        #     if lab_value is not np.nan and lab_value_id not in name_map:
-        #         # CASEPSEUDOID;ANALYSE;WERT;EINHEIT;ERMITTLUNG;BEZ;KBZ;LOINC
-        #         if row[6] is not np.nan:
-        #             lab_value_name = row[6] + "/"  # short descriptor
-        #         else:
-        #             lab_value_name = ''
-        #
-        #         lab_value_name += row[5]  # long descriptor
-        #         if row[7] is not np.nan:
-        #             lab_value_name += " (" + str(row[7]) + ")"  # LOINC
-        #         if row[3] is not np.nan:
-        #             lab_value_name += " [" + str(row[3]) + "]"  # unit
-        #
-        #         name_map[lab_value_id] = lab_value_name
-        #
-        #     if lab_value is not np.nan:
-        #         case_value_map[case_id][lab_value_id] = lab_value
 
         rows_processed += chunk_size
+
+        # log progress periodically
         if rows_processed > next_rows_threshold:
-            print(str(next_rows_threshold) + " rows processed.")
+            logger.info(str(next_rows_threshold) + "lab value rows processed.")
             next_rows_threshold += chunk_size
 
     case_diagnosis_df = None
     rows_processed = 0
     next_rows_threshold = 0
     # read diagnoses of cases
-    for chunk in pd.read_csv("20181218_case_diagnosis_data.csv", chunksize=chunk_size, delimiter=';'):  # Time: O(chunk_qty * chunksize), Size: O(1)
+    for chunk in pd.read_csv(case_diagnosis_data_file, chunksize=chunk_size, delimiter=';'):  # Time: O(chunk_qty * chunksize), Size: O(1)
         diagnosis_list_df = chunk.groupby("CASEPSEUDOID")["DKEY1"].apply(list).to_frame()
 
         # merge new diagnoses with old ones
@@ -71,8 +63,10 @@ if __name__ == "__main__":
             case_diagnosis_df = case_diagnosis_df.drop(['DKEY1_x', 'DKEY1_y'], axis=1)
 
     rows_processed += chunk_size
+
+    # log progress periodically
     if rows_processed > next_rows_threshold:
-        print(str(next_rows_threshold) + " rows processed.")
+        logger.info(str(next_rows_threshold) + " diagnosis rows processed.")
         next_rows_threshold += chunk_size
 
     # join panda dfs

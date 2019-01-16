@@ -1,8 +1,5 @@
-import idsc
-from idsc.cdwh import common, queries
 import dask.dataframe as dd
 from dask.diagnostics import ProgressBar
-import numpy as np
 
 if __name__ == "__main__":
 
