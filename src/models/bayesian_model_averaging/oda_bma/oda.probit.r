@@ -90,7 +90,9 @@ oda.probit <- function(xo, zo, niter, burnin, lam.spec=1)
             odds <- exp(logodds)
             oddsmat[i,] <- odds
             postincprob[i,] <- odds / (1 + odds)
-            gamma <- rbinom(p, 1, as.vector(postincprob[i,]))
+            temp_vec <- as.vector(postincprob[i,])
+            temp_vec[is.na(temp_vec)] <- 0
+            gamma <- rbinom(p, 1, temp_vec)
 
             if (sum(gamma) >= 1)
             {
