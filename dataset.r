@@ -12,8 +12,10 @@ make_option(c("--dataset"),
 type="character", default="./data/raw/myocardial_ischemia_16.csv ", help="Path to the dataset file", metavar="character"),
 make_option(c("--csvSeparator"),
 type="character", default=",", help="Separator for csv columns", metavar="character"),
+make_option(c("--imputationPackage"),
+type="character", default="mice", help="Package of imputation", metavar = "character"),
 make_option(c("--imputationMethod"),
-type="character", default="mice", help="Method of imputation", metavar = "character"),
+            type="character", default="ppn", help="Method of imputation", metavar = "character"),
 make_option(c("--processingCoreQty"),
 type="integer", default=4, help="Number of cores to run imputation on", metavar = "integer"),
 make_option(c("--normalizedImputation"),
@@ -38,6 +40,7 @@ opt = parse_args(opt_parser)
 
 datasetPath <-  opt$dataset
 csvSeparator <- opt$csvSeparator
+imputationPackage <- opt$imputationPackage
 imputationMethod <- opt$imputationMethod
 processingCoreQty <- opt$processingCoreQty
 normalizedImputation <- opt$normalizedImputation
@@ -72,7 +75,7 @@ if (normalizedImputation){
     print(attr(numericColumns, "scaled:scale"))
 }
 
-if (imputationMethod == 'mi'){
+if (imputationPackage == 'mi'){
     library(mi) # multiple imputation method to complete missing values in datasets
     options(mc.cores = processingCoreQty) # set the number of cores used for imputation
 
@@ -139,7 +142,7 @@ if (imputationMethod == 'mi'){
     }
 
     imputedData <- subset(complete(mdf, m = 1), select=colnames(numericColumns)) # m=1 just takes the first imputation chain
-} else if (imputationMethod == 'mice'){
+} else if (imputationPackage == 'mice'){
     library(mice)
     library(miceadds)
     if (processingCoreQty < 0){
@@ -158,12 +161,12 @@ if (imputationMethod == 'mi'){
     
 
     # parlmice produces m = n.core * m.imp.core number of chains
-    print(paste0("Starting ", processingCoreQty, " cores with each ", chainQty, " chains on it"))
+    print(paste0("Starting ", processingCoreQty, " cores, each imputing ", chainQty, " chains..."))
     if (Sys.info()[['sysname']] == "Windows"){
-        mdf <- parlmice(numericColumns,  maxit = maxIterations,  n.core = processingCoreQty, n.imp.core = chainQty, print = TRUE)
+        mdf <- parlmice(numericColumns, method=imputationMethd, maxit = maxIterations,  n.core = processingCoreQty, n.imp.core = chainQty, print = TRUE)
     }
     else{
-        mdf <- parlmice(numericColumns, cl.type='FORK', maxit = maxIterations,  n.core = processingCoreQty, n.imp.core = chainQty, print = TRUE)
+        mdf <- parlmice(numericColumns, method=imputationMethd, cl.type='FORK', maxit = maxIterations,  n.core = processingCoreQty, n.imp.core = chainQty, print = TRUE)
     }
     latestRHat <- miceadds::Rhat.mice(mdf)
     
