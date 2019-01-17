@@ -163,10 +163,10 @@ if (imputationPackage == 'mi'){
     # parlmice produces m = n.core * m.imp.core number of chains
     print(paste0("Starting ", processingCoreQty, " cores, each imputing ", chainQty, " chains..."))
     if (Sys.info()[['sysname']] == "Windows"){
-        mdf <- parlmice(numericColumns, method=imputationMethd, maxit = maxIterations,  n.core = processingCoreQty, n.imp.core = chainQty, print = TRUE)
+        mdf <- parlmice(numericColumns, method=imputationMethod, maxit = maxIterations,  n.core = processingCoreQty, n.imp.core = chainQty, print = TRUE)
     }
     else{
-        mdf <- parlmice(numericColumns, method=imputationMethd, cl.type='FORK', maxit = maxIterations,  n.core = processingCoreQty, n.imp.core = chainQty, print = TRUE)
+        mdf <- parlmice(numericColumns, method=imputationMethod, cl.type='FORK', maxit = maxIterations,  n.core = processingCoreQty, n.imp.core = chainQty, print = TRUE)
     }
     latestRHat <- miceadds::Rhat.mice(mdf)
     
