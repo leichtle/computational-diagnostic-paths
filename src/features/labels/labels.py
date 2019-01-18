@@ -28,7 +28,7 @@ class BinaryLabelExtractor(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, x_df: pd.DataFrame):
-        x_df[self.extract_to_column] = np.where(x_df[self.extract_from_column].isin(self.inclusion_labels), 1, 0)  # 0,1 encode diagnosis
+        x_df[self.extract_to_column] = np.where(x_df[self.extract_from_column].map(lambda d: self.inclusion_labels.intersection(d) != {}), 1, 0)  # 0,1 encode diagnosis
         return x_df
 
 

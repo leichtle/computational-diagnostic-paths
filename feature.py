@@ -38,8 +38,7 @@ if __name__ == "__main__":
     diagnosis_code_max = args.diagnosis_code_max
 
     logger.info(str({"message": "NEW FEATURE",
-                     "path": dataset_path})
-                )
+                     "path": dataset_path}))
 
     logger.info(str({"message": "Load dataset",
                      "path": dataset_path}))
@@ -48,8 +47,8 @@ if __name__ == "__main__":
     # prepare pipeline and run it
     inclusion_labels = {'I' + str(number) for number in range(diagnosis_code_min, diagnosis_code_max)}  # range of ICD10 codes for positive diagnosis
     pipeline = Pipeline([
-        ('drop_rows_with_diagnosis', MissingDiagnosisRowDropper(diagnosis_col_name=diagnosis_col_name)),
-        ('extract_label', BinaryLabelExtractor(extract_from_column=diagnosis_col_name, inclusion_labels=inclusion_labels)),
+        ('drop_rows_without_diagnosis', MissingDiagnosisRowDropper(diagnosis_col_name=diagnosis_col_name)),
+        ('extract_binary_label_from_diagnoses', BinaryLabelExtractor(extract_from_column=diagnosis_col_name, inclusion_labels=inclusion_labels)),
         ('drop_non_numerical_columns', NonNumericColumnDropper())
     ])
     mi_df = pipeline.fit_transform(mi_df)
