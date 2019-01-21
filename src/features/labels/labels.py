@@ -28,7 +28,14 @@ class BinaryLabelExtractor(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, x_df: pd.DataFrame):
-        x_df[self.extract_to_column] = np.where(x_df[self.extract_from_column].map(lambda d: self.inclusion_labels.intersection(d) != {}), 1, 0)  # 0,1 encode diagnosis
+        drop_dot = str.maketrans("1234567890", "1234567890", '.')
+
+        if isinstance(x_df[self.extract_from_column][0], (list, tuple)):  # remove dots from icd10 codes
+            x_df[self.extract_from_column] = x_df[self.extract_from_column].map(lambda d: {icd.translate(drop_dot) for icd in d})
+        else:
+            x_df[self.extract_from_column] = x_df[self.extract_from_column].map(lambda d: d.translate(drop_dot))
+
+        x_df[self.extract_to_column] = np.where(x_df[self.extract_from_column].map(lambda d: self.inclusion_labels.intersection({d}) != set()), 1, 0)  # 0,1 encode diagnosis
         return x_df
 
 

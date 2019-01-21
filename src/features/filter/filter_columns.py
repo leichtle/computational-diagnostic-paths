@@ -18,6 +18,4 @@ class NonNumericColumnDropper(BaseEstimator, TransformerMixin):
     @staticmethod
     def transform(x_df: pd.DataFrame):
         x_df.drop(x_df.select_dtypes(['object']), inplace=True, axis=1)
-        x_df.drop(x_df.select_dtypes(['bool']), inplace=True, axis=1)
         return x_df
-
