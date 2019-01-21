@@ -26,7 +26,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Perform bayesian variable selection on dataset.')
     parser.add_argument('--dataset', type=str, help='The path to the dataset file', required=True)
     parser.add_argument('--csv_separator', type=str, help='The separator of the data columns', default=',')
-    parser.add_argument('--importance_method', type=str, help='The method to determine feature importance. Options: bma=complete dataset, xgb=incomplete dataset', default=',')
+    parser.add_argument('--importance_method', type=str, help='The method to determine feature importance. Options: bma=complete dataset, xgb=incomplete dataset', default='xgb')
     parser.add_argument('--niter', type=int, default=100000, help='The number of iterations to perform')
     parser.add_argument('--burn_in_sim', type=int, default=500, help='Burn in sim')
     parser.add_argument('--lam_spec', type=float, default=1, help='lam spec')
@@ -92,7 +92,7 @@ if __name__ == "__main__":
         # handling of missing values: https://stats.stackexchange.com/questions/235489/xgboost-can-handle-missing-data-in-the-forecasting-phase
         # https://stackoverflow.com/questions/37617390/xgboost-handling-of-missing-values-for-split-candidate-search
 
-        # fit model no training data
+        # fit model to training data
         model = XGBClassifier()
         model.fit(features, labels)
 
@@ -111,5 +111,5 @@ if __name__ == "__main__":
         # TODO: Setup a train/test setting to validate your model
 
     # write dataset to file
-    write_df_to_csv(df=incprobs_df, store_path='data/interim/', initial_path=dataset_path, file_appendix='_importance_method_' + importance_method + '_incprobs')
+    write_df_to_csv(df=incprobs_df, store_path='data/processed/', initial_path=dataset_path, file_appendix='_importance_method_' + importance_method + '_incprobs')
 
