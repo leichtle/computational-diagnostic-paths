@@ -4,7 +4,6 @@
 
 # some imports are inline with their usage because their method names collide due R's lack of namespaces
 
-library(parallel)
 library(optparse) # parse script arguments in a pythonic way
 
 option_list = list(
@@ -15,7 +14,7 @@ type="character", default=",", help="Separator for csv columns", metavar="charac
 make_option(c("--imputationPackage"),
 type="character", default="mice", help="Package of imputation", metavar = "character"),
 make_option(c("--imputationMethod"),
-            type="character", default="ppn", help="Method of imputation", metavar = "character"),
+            type="character", default="cart", help="Method of imputation", metavar = "character"),
 make_option(c("--processingCoreQty"),
 type="integer", default=4, help="Number of cores to run imputation on", metavar = "integer"),
 make_option(c("--normalizedImputation"),
@@ -28,6 +27,8 @@ make_option(c("--rHatsConvergence"),
 type="double", default=1.1, help="Consider imputation converged if variance_across_chains/variance_within_chain <= rHatsConvergence", metavar = "double"),
 make_option(c("--maxIterations"),
 type="integer", default=100, help="Total iterations of imputations per chain before imputation checks for convergence or finishes", metavar = "integer"),
+make_option(c("--clusterSeed"),
+            type="integer", default=7, help="The seed for randomness to generate random seeds for the different cluster nodes to randomize mice", metavar = "integer"),
 make_option(c("--isDetailed"),
 type="logical", default=FALSE, help="Perform extra prints and outputs", metavar = "logical"),
 make_option(c("--showPlots"),
@@ -48,6 +49,7 @@ chainQty <- opt$chainQty
 untilConvergence <- opt$untilConvergence
 rHatsConvergence <- opt$rHatsConvergence
 maxIterations <- opt$maxIterations
+clusterSeed <- opt$clusterSeed
 isDetailed <- opt$isDetailed
 showPlots <- opt$showPlots
 
@@ -145,6 +147,8 @@ if (imputationPackage == 'mi'){
 } else if (imputationPackage == 'mice'){
     library(mice)
     library(miceadds)
+    
+    set.seed(clusterSeed)
     if (processingCoreQty < 0){
         processingCoreQty <- parallel::detectCores() - 1
     }
@@ -163,10 +167,10 @@ if (imputationPackage == 'mi'){
     # parlmice produces m = n.core * m.imp.core number of chains
     print(paste0("Starting ", processingCoreQty, " cores, each imputing ", chainQty, " chains..."))
     if (Sys.info()[['sysname']] == "Windows"){
-        mdf <- parlmice(numericColumns, method=imputationMethod, maxit = maxIterations,  n.core = processingCoreQty, n.imp.core = chainQty, print = TRUE)
+        mdf <- parlmice(numericColumns, method=imputationMethod, maxit = maxIterations,  n.core = processingCoreQty, n.imp.core = chainQty, cluster.seed = clusterSeed, print = TRUE)
     }
     else{
-        mdf <- parlmice(numericColumns, method=imputationMethod, cl.type='FORK', maxit = maxIterations,  n.core = processingCoreQty, n.imp.core = chainQty, print = TRUE)
+        mdf <- parlmice(numericColumns, method=imputationMethod, cl.type='FORK', maxit = maxIterations,  n.core = processingCoreQty, n.imp.core = chainQty, cluster.seed = clusterSeed, print = TRUE)
     }
     latestRHat <- miceadds::Rhat.mice(mdf)
     
