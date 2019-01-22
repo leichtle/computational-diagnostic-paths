@@ -12,9 +12,9 @@ type="character", default="./data/raw/myocardial_ischemia_16.csv ", help="Path t
 make_option(c("--csvSeparator"),
 type="character", default=",", help="Separator for csv columns", metavar="character"),
 make_option(c("--imputationPackage"),
-type="character", default="mice", help="Package of imputation", metavar = "character"),
+type="character", default="mice", help="Package of imputation: mi or mice", metavar = "character"),
 make_option(c("--imputationMethod"),
-            type="character", default="cart", help="Method of imputation", metavar = "character"),
+            type="character", default="cart", help="Method of imputation in mice: e.g. ppn or cart", metavar = "character"),
 make_option(c("--processingCoreQty"),
 type="integer", default=4, help="Number of cores to run imputation on", metavar = "integer"),
 make_option(c("--normalizedImputation"),
@@ -125,7 +125,7 @@ if (imputationPackage == 'mi'){
         print(paste0("Rhat to measure convergence of imputation (should be < ", rHatsConvergence, "):"))
         print(latestRHat)
         isNotConverged <- any(latestRHat > rHatsConvergence)
-        if(isNotConverged){
+        if (isNotConverged){
             print("Imputation not converged. Continuing...")
         }
         else{
