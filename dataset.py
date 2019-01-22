@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     logger.info(str({"message": "Load dataset",
                      "path": dataset_path}))
-    mi_df = pd.read_csv(dataset_path, header=0, sep=csv_separator)  # read data from csv
+    df = pd.read_csv(dataset_path, header=0, sep=csv_separator)  # read data from csv
 
     # prepare pipeline and run it
     components = []
@@ -70,7 +70,11 @@ if __name__ == "__main__":
         file_appendix += '_impType_' + imputation_type.name + '_nIter_' + str(iteration_qty)
 
     pipeline = Pipeline(components)
-    mi_df = pipeline.fit_transform(mi_df)  # apply pipeline
+    df = pipeline.fit_transform(df)  # apply pipeline
+
+    logger.info({"message": "Results",
+                 "dataset dimensions":
+                 df.shape})
 
     # write dataset to file
-    write_df_to_csv(df=mi_df, store_path='data/interim/', initial_path=dataset_path, file_appendix=file_appendix)
+    write_df_to_csv(df=df, store_path='data/interim/', initial_path=dataset_path, file_appendix=file_appendix)
