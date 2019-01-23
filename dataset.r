@@ -77,6 +77,7 @@ if (normalizedImputation){
     print(attr(numericColumns, "scaled:scale"))
 }
 
+epoch <- 1
 if (imputationPackage == 'mi'){
     library(mi) # multiple imputation method to complete missing values in datasets
     options(mc.cores = processingCoreQty) # set the number of cores used for imputation
@@ -105,7 +106,6 @@ if (imputationPackage == 'mi'){
 
     # TODO: max.minutes seems to be not setable via a variable
     mdf <- mi(mdf, n.chains = chainQty, n.iter = 0, max.minutes = 1000000) # initiate mutiple imputation
-    epoch <- 0
     isNotConverged <- TRUE
     isFirstRun <- TRUE
     while (isFirstRun | untilConvergence & isNotConverged) {
@@ -184,7 +184,7 @@ if (imputationPackage == 'mi'){
     # print rhat convergence
     print(paste0("Rhat to measure convergence of imputation (should be < ", rHatsConvergence, "):"))
     print(latestRHat)
-    isNotConverged <- any(latestRHat > rHatsConvergence)
+    isNotConverged <- any(na.omit(latestRHat["Rhat.M.imp"]) > rHatsConvergence)
     if(isNotConverged){
         print("Imputation not converged. Continuing...")
     }
@@ -222,7 +222,7 @@ if(!grepl("[0-9]{14}", fileName)){  # try to find a timestamp with 4 digit year 
     now <- Sys.time()
     path <- paste0(path, format(now, "%Y%m%d%H%M%S"), "_")
 }
-path <- paste0(path, fileName, "_impType_",imputationMethod,"_nIter_", maxIterations, "_chainQty_", chainQty, "_rHatsConvergence_", rHatsConvergence, "_normImputation_", normalizedImputation , ".csv")
+path <- paste0(path, fileName, "_impType_",imputationPackage,"_nIter_", maxIterations*epoch, "_chainQty_", chainQty, "_rHatsConvergence_", rHatsConvergence, "_normImputation_", normalizedImputation , ".csv")
 print(path)
 write.csv(imputedDataFrame, file=path, row.names = FALSE)
 cat("Done.")
