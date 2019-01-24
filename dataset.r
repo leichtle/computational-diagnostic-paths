@@ -6,38 +6,40 @@
 
 library(optparse) # parse script arguments in a pythonic way
 
-option_list = list(
+optionList = list(
 make_option(c("--dataset"),
-type="character", default="./data/raw/myocardial_ischemia_16.csv ", help="Path to the dataset file", metavar="character"),
+    type = "character", default = "./data/raw/myocardial_ischemia_16.csv ", help = "Path to the dataset file", metavar = "character"),
 make_option(c("--csvSeparator"),
-type="character", default=",", help="Separator for csv columns", metavar="character"),
+    type = "character", default = ",", help = "Separator for csv columns", metavar = "character"),
 make_option(c("--imputationPackage"),
-type="character", default="mice", help="Package of imputation: mi or mice", metavar = "character"),
+    type = "character", default = "mice", help = "Package of imputation: mi or mice", metavar = "character"),
 make_option(c("--imputationMethod"),
-            type="character", default="cart", help="Method of imputation in mice: e.g. ppn or cart", metavar = "character"),
+    type = "character", default = "cart", help = "Method of imputation in mice: e.g. ppn or cart", metavar = "character"),
 make_option(c("--processingCoreQty"),
-type="integer", default=4, help="Number of cores to run imputation on", metavar = "integer"),
+    type = "integer", default = 4, help = "Number of cores to run imputation on", metavar = "integer"),
 make_option(c("--normalizedImputation"),
-type="logical", default=FALSE, help="If data should be normalized before and denormalized after imputation", metavar = "logical"),
+    type = "logical", default = FALSE, help = "If data should be normalized before and denormalized after imputation", metavar = "logical"),
 make_option(c("--chainQty"),
-type="integer", default=4, help="Number of separate imputation chains", metavar = "integer"),
+    type = "integer", default = 4, help = "Number of separate imputation chains", metavar = "integer"),
 make_option(c("--untilConvergence"),
-type="logical", default=TRUE, help="If chains should be imputed until convergence", metavar = "logical"),
+    type = "logical", default = TRUE, help = "If chains should be imputed until convergence", metavar = "logical"),
 make_option(c("--rHatsConvergence"),
-type="double", default=1.1, help="Consider imputation converged if variance_across_chains/variance_within_chain <= rHatsConvergence", metavar = "double"),
+    type = "double", default = 1.1, help = "Consider imputation converged if variance_across_chains/variance_within_chain <= rHatsConvergence", metavar = "double"),
 make_option(c("--maxIterations"),
-type="integer", default=100, help="Total iterations of imputations per chain before imputation checks for convergence or finishes", metavar = "integer"),
+    type = "integer", default = 100, help = "Total iterations of imputations per chain before imputation checks for convergence or finishes", metavar = "integer"),
 make_option(c("--clusterSeed"),
-            type="integer", default=7, help="The seed for randomness to generate random seeds for the different cluster nodes to randomize mice", metavar = "integer"),
+    type = "integer", default = 7, help = "The seed for randomness to generate random seeds for the different cluster nodes to randomize mice", metavar = "integer"),
+make_option(c("--storeAllImputations"),
+    type = "logical", default = FALSE, help = "Save all imputations to disk with a ordinal postfix e.g. _1", metavar = "logical"),
 make_option(c("--isDetailed"),
-type="logical", default=FALSE, help="Perform extra prints and outputs", metavar = "logical"),
+    type = "logical", default = FALSE, help = "Perform extra prints and outputs", metavar = "logical"),
 make_option(c("--showPlots"),
-type="logical", default=FALSE, help="Show plots", metavar = "logical")
+    type = "logical", default = FALSE, help = "Show plots", metavar = "logical")
 )
 
 # parse script arguments
-opt_parser = OptionParser(option_list=option_list)
-opt = parse_args(opt_parser)
+optParser = OptionParser(option_list=optionList)
+opt = parse_args(optParser)
 
 datasetPath <-  opt$dataset
 csvSeparator <- opt$csvSeparator
@@ -50,6 +52,7 @@ untilConvergence <- opt$untilConvergence
 rHatsConvergence <- opt$rHatsConvergence
 maxIterations <- opt$maxIterations
 clusterSeed <- opt$clusterSeed
+storeAllImputations <- opt$storeAllImputations
 isDetailed <- opt$isDetailed
 showPlots <- opt$showPlots
 
@@ -78,6 +81,7 @@ if (normalizedImputation){
 }
 
 epoch <- 1
+imputedData <- NULL
 if (imputationPackage == 'mi'){
     library(mi) # multiple imputation method to complete missing values in datasets
     options(mc.cores = processingCoreQty) # set the number of cores used for imputation
@@ -102,7 +106,6 @@ if (imputationPackage == 'mi'){
 
         marginplot(mdf[c(1,2)]) # special box plot to compare missingness of two variables
     }
-
 
     # TODO: max.minutes seems to be not setable via a variable
     mdf <- mi(mdf, n.chains = chainQty, n.iter = 0, max.minutes = 1000000) # initiate mutiple imputation
@@ -143,7 +146,14 @@ if (imputationPackage == 'mi'){
         plot(mdf) # plot the match of imputed and observed data (used to debug convergence)
     }
 
-    imputedData <- subset(complete(mdf, m = 1), select=colnames(numericColumns)) # m=1 just takes the first imputation chain
+    if (storeAllImputations){
+        imputedDatasets <- complete(mdf)
+        for (i in 1:chainQty){
+            imputedData[[i]] <- subset(imputedDatasets[[i]], select=colnames(numericColumns)) # stores all imputations
+        }
+    }else{
+        imputedData <- subset(complete(mdf, m = 1), select=colnames(numericColumns)) # m=1 just takes the first imputation chain
+    }
 } else if (imputationPackage == 'mice'){
     library(mice)
     library(miceadds)
@@ -199,16 +209,36 @@ if (imputationPackage == 'mi'){
         stripplot(mdf)  # inspect quality of imputations
     }
 
-    imputedData <- complete(mdf, 1)
+    if (storeAllImputations){
+        chainQty <- processingCoreQty * chainQty # adjust total number of chains
+        for (i in 1:chainQty){
+            imputedData[[i]] <- complete(mdf, i) # stores all imputations
+        }
+    }else{
+        imputedData <- complete(mdf, 1)
+    }
 }
 
 
 if (normalizedImputation){
     print("Denormalize data after imputation...")
-    imputedData <-t(apply(imputedData, 1, function(r)r*attr(numericColumns,'scaled:scale') + attr(numericColumns, 'scaled:center')))
+    if (storeAllImputations){
+        for (i in 1:chainQty){
+            imputedData[[i]] <-t(apply(imputedData[[i]], 1, function(r)r*attr(numericColumns,'scaled:scale') + attr(numericColumns, 'scaled:center')))
+        }
+    }else{
+        imputedData <-t(apply(imputedData, 1, function(r)r*attr(numericColumns,'scaled:scale') + attr(numericColumns, 'scaled:center')))
+    }
 }
 
-imputedDataFrame <- cbind(nonNumericColumns, imputedData)  # merge non-numeric and imputed, numeric data together
+imputedDataFrame <- NULL
+if (storeAllImputations){
+    for (i in 1:chainQty){
+        imputedDataFrame[[i]] <- cbind(nonNumericColumns, imputedData[[i]])  # merge non-numeric and imputed, numeric data together
+    }
+}else{
+    imputedDataFrame <- cbind(nonNumericColumns, imputedData)  # merge non-numeric and imputed, numeric data together
+}
 
 # write imputed data to file with timestamp
 cat("Writing imputed data to file...")
@@ -222,7 +252,16 @@ if(!grepl("[0-9]{14}", fileName)){  # try to find a timestamp with 4 digit year 
     now <- Sys.time()
     path <- paste0(path, format(now, "%Y%m%d%H%M%S"), "_")
 }
-path <- paste0(path, fileName, "_impType_",imputationPackage,"_nIter_", maxIterations*epoch, "_chainQty_", chainQty, "_rHatsConvergence_", rHatsConvergence, "_normImputation_", normalizedImputation , ".csv")
-print(path)
-write.csv(imputedDataFrame, file=path, row.names = FALSE)
+
+if (storeAllImputations){
+    for (i in 1:chainQty){
+        filePath <- paste0(path, fileName, "_impType_",imputationPackage,"_nIter_", maxIterations*epoch, "_chainQty_", chainQty, "_rHatsConvergence_", rHatsConvergence, "_normImputation_", normalizedImputation , "_", i , ".csv")
+        print(filePath)
+        write.csv(imputedDataFrame[[i]], file=filePath, row.names = FALSE)
+    }
+}else{
+    path <- paste0(path, fileName, "_impType_",imputationPackage,"_nIter_", maxIterations*epoch, "_chainQty_", chainQty, "_rHatsConvergence_", rHatsConvergence, "_normImputation_", normalizedImputation , ".csv")
+    print(path)
+    write.csv(imputedDataFrame, file=path, row.names = FALSE)
+}
 cat("Done.")
