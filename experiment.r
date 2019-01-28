@@ -83,7 +83,7 @@ cat("Writing dataset to file...")
 fileName <- sub(pattern = "(.*?)\\.[a-zA-Z]*$", replacement = "\\1", basename(datasetPath))
 
 # prepare dataset store path
-path <- 'data/interim/'
+path <- 'data/processed/'
 if(!grepl("[0-9]{14}", fileName)){  # try to find a timestamp with 4 digit year and each 2 digits for month, day, hour, minute, second
     # write imputed data to file with timestamp
     cat("Writing imputed data to file...")
