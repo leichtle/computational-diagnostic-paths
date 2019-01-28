@@ -35,7 +35,7 @@ class BinaryLabelExtractor(BaseEstimator, TransformerMixin):
         else:
             x_df[self.extract_from_column] = x_df[self.extract_from_column].map(lambda d: d.translate(drop_dot))
 
-        x_df[self.extract_to_column] = np.where(x_df[self.extract_from_column].map(lambda d: self.inclusion_labels.intersection({d}) != set()), 1, 0)  # 0,1 encode diagnosis
+        x_df[self.extract_to_column] = np.where(x_df[self.extract_from_column].map(lambda d: self.inclusion_labels.intersection(d) != set()), 1, 0)  # 0,1 encode diagnosis
         return x_df
 
 

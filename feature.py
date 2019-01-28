@@ -30,7 +30,7 @@ if __name__ == "__main__":
     parser.add_argument('--diagnosis_col_name', type=str, default='HDIA', help='The name of the diagnosis column in the data frame.')
     parser.add_argument('--diagnosis_code_min', type=int, default=200, help='Lowest ICD-10 code to be considered positive diagnosis.')
     parser.add_argument('--diagnosis_code_max', type=int, default=259, help='Highest ICD-10 code to be considered positive diagnosis.')
-    parser.add_argument('--single-diagnosis', type=bool, default=False, help="If the diagnosis field contains a single diagnosis or a list.")
+    parser.add_argument('--single-diagnosis', action='store_true', help="If the diagnosis field contains a single diagnosis or a list.")
 
     args = parser.parse_args()
     dataset_path = args.dataset
