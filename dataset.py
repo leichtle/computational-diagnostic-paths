@@ -57,9 +57,9 @@ if __name__ == "__main__":
 
     # prepare pipeline and run it
     components = []
-    if indicator_columns is not []:
+    if indicator_columns is not [] and indicator_columns is not None:
         components.append(('filter_by_indicator_columns', ValuePresenceRowFilter(required_columns=indicator_columns)))
-    file_appendix += '_indicatorColumns_' + str(indicator_columns)
+        file_appendix += '_indicatorColumns_' + str(indicator_columns)
 
     if do_na_drop_threshold:
         components.append(('drop_above_threshold_na_columns', ThresholdingMissingDataColumnDropper(na_drop_threshold=na_drop_threshold)))
