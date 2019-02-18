@@ -255,12 +255,12 @@ if(!grepl("[0-9]{14}", fileName)){  # try to find a timestamp with 4 digit year 
 
 if (storeAllImputations){
     for (i in 1:chainQty){
-        filePath <- paste0(path, fileName, "_impType_",imputationPackage,"_nIter_", maxIterations*epoch, "_chainQty_", chainQty, "_rHatsConvergence_", rHatsConvergence, "_normImputation_", normalizedImputation , "_", i , ".csv")
+        filePath <- paste0(path, fileName, "_impType_",imputationPackage,"_nIter_", maxIterations*epoch, "_chains_", chainQty, "_rConv_", rHatsConvergence , "_", i , ".csv")
         print(filePath)
         write.csv(imputedDataFrame[[i]], file=filePath, row.names = FALSE)
     }
 }else{
-    path <- paste0(path, fileName, "_impType_",imputationPackage,"_nIter_", maxIterations*epoch, "_chainQty_", chainQty, "_rHatsConvergence_", rHatsConvergence, "_normImputation_", normalizedImputation , ".csv")
+    path <- paste0(path, fileName, "_impType_",imputationPackage,"_nIter_", maxIterations*epoch, "_chains_", chainQty, "_rConv_", rHatsConvergence , ".csv")
     print(path)
     write.csv(imputedDataFrame, file=path, row.names = FALSE)
 }

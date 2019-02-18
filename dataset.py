@@ -59,11 +59,11 @@ if __name__ == "__main__":
     components = []
     if indicator_columns is not []:
         components.append(('filter_by_indicator_columns', ValuePresenceRowFilter(required_columns=indicator_columns)))
-    file_appendix += '_indicatorColumns_' + str(indicator_columns)
+    file_appendix += '_indicatorCols_' + str(indicator_columns)
 
     if do_na_drop_threshold:
         components.append(('drop_above_threshold_na_columns', ThresholdingMissingDataColumnDropper(na_drop_threshold=na_drop_threshold)))
-        file_appendix += '_naDropThreshold_' + str(na_drop_threshold)
+        file_appendix += '_naLimit_' + str(na_drop_threshold)
 
     if do_imputation:
         components.append(('impute_missing_values', DataImputer(imputation_type=imputation_type, iteration_qty=iteration_qty)))
