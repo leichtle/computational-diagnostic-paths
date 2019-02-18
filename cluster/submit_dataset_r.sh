@@ -8,5 +8,5 @@
 
 echo $1
 export PATH=/software/bin:$PATH # append R location to path before running it
-Rscript ./dataset.r $1  # > ./traces/r_info.log 2> ./traces/r_error.log
+Rscript ./dataset.r $1
 
