@@ -5,7 +5,6 @@
 #SBATCH -t 700:00:00
 #SBATCH -p nodes
 #SBATCH -A insel
-#SBATCH --mem-per-cpu=180000
 
 echo $1
 export PATH=/software/bin:$PATH # append R location to path before running it
