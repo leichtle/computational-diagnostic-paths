@@ -17,6 +17,8 @@ make_option(c("--burnIn"),
 type="integer", default=500, help="The number of iterations we discard to tune the initial probabilities (burn-in)", metavar = "integer"),
 make_option(c("--lambda"),
 type="double", default=1, help="lambda", metavar = "double"),
+make_option(c("--coeffShrink"),
+type="double", default=0, help="ridge coefficient shrinking", metavar = "double"),
 make_option(c("--appendix"),
 type="character", help="Optional repetition id of the experiment to explore convergence across multiple chains", metavar = "character"))
 
@@ -32,6 +34,7 @@ datasetPath <- opt$dataset
 iterationQty <- opt$niter
 burnIn <- opt$burnIn
 lambda <- opt$lambda
+coeffShrink <- opt$coeffShrink
 label <- opt$label
 if (is.null(opt$appendix)){
     appendix <- ""
@@ -63,7 +66,7 @@ print(label)
 features <- subset(miData, select=featureNames)  # extract features
 labels <- miData[label]  # extract label
 
-odaResults <- oda.bma(x = features, y = labels, niter = iterationQty, burnin = burnIn, lambda = lambda, model = "probit", prior = "normal")
+odaResults <- oda.bma(x = features, y = labels, niter = iterationQty, burnin = burnIn, lambda = lambda, coeffShrink=coeffShrink, model = "probit", prior = "normal")
 
 # print(odaResults$incprob.rb)
 # print(odaResults$betabma)
