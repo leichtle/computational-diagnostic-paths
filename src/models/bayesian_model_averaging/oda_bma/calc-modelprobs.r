@@ -8,19 +8,56 @@
 # At the terminal type:" R CMD SHLIB callmodelprobs.c" and press Enter
 # or if using Linux the system command can be used from within R: "system("R CMD SHLIB callmodelprobs.c")"
 
-system("R CMD SHLIB callmodelprobs.c")
-dyn.load("callmodelprobs.so") 
-is.loaded("callmodelprobs") # make sure it is loaded
+#system("R CMD SHLIB callmodelprobs.c")
+#if(.Platform$OS.type == "unix") {
+#  dyn.load("./callmodelprobs.so")  # Linux/Unix
+#} else {
+#  dyn.load("./callmodelprobs.dll")  # Windows
+#}
 
-modelprobs.rb <- function(n.unique,niter,p,gammaunique,probmat.oda)
-  .C("callmodelprobs",
-     as.integer(n.unique),
-     as.integer(niter),
-     as.integer(p),
-     as.integer(gammaunique),
-     as.double(probmat.oda),
-     modelprobs = double(n.unique))$modelprobs
-# Arguments: 
+#if(!is.loaded("callmodelprobs")){ # make sure it is loaded
+#    stop('callmodelprobs is not loaded')
+#}
+
+
+#modelprobs.rb <- function(n.unique,niter,p,gammaunique,probmat.oda)
+#  .C("callmodelprobs",
+#     as.integer(n.unique),
+#     as.integer(niter),
+#     as.integer(p),
+#     as.integer(gammaunique),
+#     as.double(probmat.oda),
+#     modelprobs = double(n.unique))$modelprobs
+
+# reimplementation of modelprobs.rb in pure R
+modelprobs.rb <-function(n.unique, niter, p, gammaunique, probmat.oda) {
+    n.unique <- as.integer(n.unique)
+    niter <- as.integer(niter)
+    p <- as.integer(p)
+    gammaunique <- as.integer(gammaunique)
+    probmat.oda <- as.double(probmat.oda)
+    modelprobs <- double(n.unique)
+
+    for (i in 0:(n.unique - 1)) {
+        tempsum <- 0
+        for (j in 0:(niter - 1)) {
+            tempprod <- 1.0
+            for (k in 0:(p - 1)) {
+                if (gammaunique[1 + i + k * n.unique] == 1) {
+                    tempprod <- tempprod * probmat.oda[1 + j + k * niter]
+                }
+                else{
+                    tempprod <- tempprod * (1.0 - probmat.oda[1 + j + k * niter])
+                }
+            }
+            tempsum <- tempsum + tempprod
+        }
+        modelprobs[[1 + i]] <- tempsum / niter
+    }
+
+    return(modelprobs)
+}
+# Arguments:
 # n.unique:     Number of unique models for which RB estimates of posterior model probabilities need to be calculated
 # niter:        Number of MCMC iterations for which the posterior inclusion probabilities
 #               will be used in the calculation
@@ -59,4 +96,4 @@ probest <- modelprobs.rb(n.unique=nrow(gamma.u),
 						probmat.oda = t(oda.pima$incprob[-c(1:burnin.sim),]))
 
 # Estimated posterior probability of unsampled models
-1-sum(probest) 
+1-sum(probest)

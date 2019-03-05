@@ -3,6 +3,7 @@
 ###
 
 library(optparse) # parse script arguments in a pythonic way
+source("./src/models/bayesian_model_averaging/oda_bma/calc-modelprobs.r")
 source("./src/models/bayesian_model_averaging/oda_bma/oda.bma.r", chdir=TRUE)
 
 # configure parser and parse arguments
@@ -73,6 +74,19 @@ odaResults <- oda.bma(x = features, y = labels, niter = iterationQty, burnin = b
 # print(odaResults$incprob)
 # print(odaResults$gamma)
 # print(odaResults$odds)
+
+# matrix of unique models from ODA
+gamma.u <- unique(odaResults$gamma[-c(1:burnIn),])
+
+# vector of RB estimates of model probabilities corresponding to models in gamma.u
+probest <- modelprobs.rb(n.unique=nrow(gamma.u),
+						niter=nrow(odaResults$incprob[-c(1:burnIn),]),
+						p = ncol(gamma.u),
+						gammaunique=t(gamma.u),
+						probmat.oda = t(odaResults$incprob[-c(1:burnIn),]))
+
+print("Estimated posterior probability of unsampled models (should be as small as possible):")
+print(1-probest)
 
 # create a new dataset for inclusion probabilities
 incprobsDf <- data.frame(matrix(ncol = length(featureNames), nrow = 0))
