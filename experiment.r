@@ -3,7 +3,7 @@
 ###
 
 library(optparse) # parse script arguments in a pythonic way
-source("./src/models/bayesian_model_averaging/oda_bma/calc-modelprobs.r")
+source("./src/models/bayesian_model_averaging/oda_bma/calc-modelprobs.r", chdir=TRUE)
 source("./src/models/bayesian_model_averaging/oda_bma/oda.bma.r", chdir=TRUE)
 
 # configure parser and parse arguments
@@ -19,7 +19,9 @@ type="integer", default=500, help="The number of iterations we discard to tune t
 make_option(c("--lambda"),
 type="double", default=1, help="lambda", metavar = "double"),
 make_option(c("--coeffShrink"),
-type="double", default=0, help="ridge coefficient shrinking", metavar = "double"),
+type="double", default=0, help="regularization through coefficient shrinking", metavar = "double"),
+make_option(c("--ridgeLassoBlend"),
+type="double", default=0, help="Blend L2 regularization (ridge) with L1 regularization (LASSO). regularization = (1-ridgeLassoBlend) * ridge + ridgeLassoBlend * LASSO ", metavar = "double"),
 make_option(c("--appendix"),
 type="character", help="Optional repetition id of the experiment to explore convergence across multiple chains", metavar = "character"))
 
@@ -36,6 +38,7 @@ iterationQty <- opt$niter
 burnIn <- opt$burnIn
 lambda <- opt$lambda
 coeffShrink <- opt$coeffShrink
+ridgeLassoBlend <- opt$ridgeLassoBlend
 label <- opt$label
 if (is.null(opt$appendix)){
     appendix <- ""
@@ -67,7 +70,7 @@ print(label)
 features <- subset(miData, select=featureNames)  # extract features
 labels <- miData[label]  # extract label
 
-odaResults <- oda.bma(x = features, y = labels, niter = iterationQty, burnin = burnIn, lambda = lambda, coeffShrink=coeffShrink, model = "probit", prior = "normal")
+odaResults <- oda.bma(x = features, y = labels, niter = iterationQty, burnin = burnIn, lambda = lambda, coeffShrink=coeffShrink, ridgeLassoBlend=ridgeLassoBlend, model = "probit", prior = "normal")
 
 # print(odaResults$incprob.rb)
 # print(odaResults$betabma)

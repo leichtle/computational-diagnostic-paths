@@ -1,6 +1,7 @@
-oda.probit <- function(xo, zo, niter, burnin, lam.spec=1, coeffShrink=0)
+oda.probit <- function(xo, zo, niter, burnin, lam.spec=1, coeffShrink=0, ridgeLassoBlend=0)
 {
     library(MASS)
+    library(glmnet)
     xo <- as.matrix(xo)
     zo <- as.vector(zo)
     no <- nrow(xo)
@@ -55,11 +56,17 @@ oda.probit <- function(xo, zo, niter, burnin, lam.spec=1, coeffShrink=0)
 				if (coeffShrink == 0)  # if no coefficient shrinking is applied, we keep the original linear model
 				{
 					gamma.lm <- lm(yo ~ xogamma)
-					betaogamma <- gamma.lm$coefficients[- 1]
+					betaogamma <- gamma.lm$coefficients[-1]
 				}
 				else {  # if coefficient shrinking is applied, we use a ridge regression instead
-					gamma.lm <- lm.ridge(yo ~ xogamma)
-					betaogamma <- gamma.lm$coef / gamma.lm$scales
+                    if (ridgeLassoBlend == 0){
+					    gamma.lm <- lm.ridge(yo ~ xogamma, lambda=coeffShrink)
+					    betaogamma <- coef(gamma.lm)[-1]
+                    }
+                    else{
+                        glmmod <- glmnet(xogamma, y=yo, alpha=ridgeLassoBlend, lambda=coeffShrink)
+                        betaogamma <-coef(glmmod)[-1]
+                    }
 				}
 
                 betaogamma <- as.matrix(betaogamma)
@@ -93,8 +100,14 @@ oda.probit <- function(xo, zo, niter, burnin, lam.spec=1, coeffShrink=0)
 				betaolsc[i,] <- as.vector(fullc.lm$coefficients)
 			}
 			else {  # if coefficient shrinking is applied, we use a ridge regression instead
-				fullc.lm <- lm.ridge(yc ~ xcin - 1)
-				betaolsc[i,] <- as.vector(fullc.lm$coef/fullc.lm$scales)
+				if (ridgeLassoBlend == 0){
+					fullc.lm <- lm.ridge(yc ~ xcin - 1, lambda=coeffShrink)
+					betaolsc[i,] <- as.vector(coef(fullc.lm))
+				}
+				else{
+					glmmod <- glmnet(xcin - 1, y=yc, alpha=ridgeLassoBlend, lambda=coeffShrink)
+					betaolsc[i,] <- as.vector(coef(glmmod)[-1])
+				}
 			}
 
             odds <- rep(0, p)

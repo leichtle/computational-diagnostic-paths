@@ -2,7 +2,7 @@ source("./oda.normal.r")
 source("./oda.studentst.r")
 source("./oda.probit.r")
 
-oda.bma <- function(x,y,niter,burnin,model="lm",prior="Students-t",lambda=1, coeffShrink=0, alpha=1)
+oda.bma <- function(x,y,niter,burnin,model="lm",prior="Students-t",lambda=1, coeffShrink=0, ridgeLassoBlend=0, alpha=1)
   {
     # Error message
     if (model=="probit" & prior!="normal")
@@ -17,6 +17,6 @@ oda.bma <- function(x,y,niter,burnin,model="lm",prior="Students-t",lambda=1, coe
     else if (model=="lm" & prior=="Students-t")
        result <- oda.studentst(xo=x,yo=y,niter=niter,burnin=burnin,alpha=alpha)
     else if (model=="probit" & prior=="normal")
-       result <- oda.probit(xo=x,zo=y,niter=niter,burnin=burnin,lam.spec=lambda, coeffShrink=coeffShrink)
+       result <- oda.probit(xo=x,zo=y,niter=niter,burnin=burnin,lam.spec=lambda, coeffShrink=coeffShrink, ridgeLassoBlend=ridgeLassoBlend)
     return(result)
   }
