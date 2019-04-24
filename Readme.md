@@ -60,18 +60,62 @@ Results from a proof-of-concept (POC) could not exactly be reproduced, since BMA
 
 After a discussion with Alex Leichtle and Zara Liniger, we think the following measures could lead to a first success in finding predictive analytes to diagnose Myocardial Ischemia (MI):
 * Rebuild the dataset from the Insel Data Platform to include all lab data of all cases
-* Filter the dataset to only contain cases where Troponin (TNT) was measured, since this is the current go-to analyte to detect MI. Then drop all columns that contain no data.
-     sbatch ./cluster/submit_dataset.sh "--dataset ./data/raw/20181218000000_case_lab_diagnosis_data.csv --diagnosis_indicator_column 638 --na_drop_threshold 1.0 --skip_imputation"
-     638 = ng/L;Troponin-T-hs;TNThsn;67151-1
+* Filter the dataset to only contain cases where Troponin (TNT) was measured, since this is the current go-to analyte to detect MI. Then drop all columns that lack more than na_drop_threshold amount of data. 
+	sbatch ./cluster/submit_dataset.sh "--dataset ./data/raw/20181218000000_case_lab_diagnosis_data.csv --diagnosis_indicator_column 638 --na_drop_threshold 0.8 --skip_imputation"
+	sbatch ./cluster/submit_dataset.sh "--dataset ./data/raw/20181218000000_case_lab_diagnosis_data.csv --diagnosis_indicator_column 638 --na_drop_threshold 0.6 --skip_imputation"
+	sbatch ./cluster/submit_dataset.sh "--dataset ./data/raw/20181218000000_case_lab_diagnosis_data.csv --diagnosis_indicator_column 638 --na_drop_threshold 0.4 --skip_imputation"
+	sbatch ./cluster/submit_dataset.sh "--dataset ./data/raw/20181218000000_case_lab_diagnosis_data.csv --diagnosis_indicator_column 638 --na_drop_threshold 0.2 --skip_imputation" 
+    638 = ng/L;Troponin-T-hs;TNThsn;67151-1 (https://r.details.loinc.org/LOINC/67151-1.html?sections=Comprehensive)
+	This results in datasets of size:
+	0.2: (29897, 8)
+	0.4: (29897, 26)
+	0.6: (29897, 59)
+	0.8: (29897, 110)
 * Based on this new dataset, perform imputation.
 	examples:
-     sbatch ./cluster/submit_dataset_impute_mi_diagnostics_r.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_naDropThreshold_1.0_indicatorColumns_['638'].csv --processingCoreQty 40 --chainQty 20 --untilConvergence TRUE --rHatsConvergence 1.1"
-     sbatch ./cluster/submit_dataset_impute_mi_diagnostics_r.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_naDropThreshold_1.0_indicatorColumns_['638'].csv --processingCoreQty 40 --chainQty 3 --untilConvergence TRUE --rHatsConvergence 1.1"
-     sbatch ./cluster/submit_dataset_impute_mi_diagnostics_r.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_naDropThreshold_1.0_indicatorColumns_['638'].csv --processingCoreQty 40 --chainQty 3 --untilConvergence FALSE --maxIterations 1000000"
+	mi:
+	sbatch ./cluster/submit_dataset_r.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.2.csv --maxIterations 30 --imputationPackage mi --processingCoreQty 3 --chainQty 3 --untilConvergence TRUE --rHatsConvergence 1.1 --storeAllImputations TRUE"
+	sbatch ./cluster/submit_dataset_r.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.4.csv --maxIterations 30 --imputationPackage mi --processingCoreQty 3 --chainQty 3 --untilConvergence TRUE --rHatsConvergence 1.1 --storeAllImputations TRUE"
+	
+	mice:
+    sbatch ./cluster/submit_dataset_r.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.2.csv --imputationPackage mice --imputationMethod cart --maxIterations 80 --processingCoreQty 3 --chainQty 1 --clusterSeed 7 --storeAllImputations TRUE"
+     
 * Assuming the imputation does not diverge, build diagnostic output feature
+
+	Na < 0.2 dataset (mice):
+	sbatch ./cluster/submit_feature.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.2_impType_mice_nIter_80_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_1.csv --diagnosis_col_name DKEY1 --diagnosis_code_min 200 --diagnosis_code_max 259"
+	sbatch ./cluster/submit_feature.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.2_impType_mice_nIter_80_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_2.csv --diagnosis_col_name DKEY1 --diagnosis_code_min 200 --diagnosis_code_max 259"
+	sbatch ./cluster/submit_feature.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.2_impType_mice_nIter_80_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_3.csv --diagnosis_col_name DKEY1 --diagnosis_code_min 200 --diagnosis_code_max 259"
+
+	Na < 0.4 dataset (mice):
+	sbatch ./cluster/submit_feature.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.4_impType_mice_nIter_800_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_1.csv --diagnosis_col_name DKEY1 --diagnosis_code_min 200 --diagnosis_code_max 259"
+	sbatch ./cluster/submit_feature.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.4_impType_mice_nIter_800_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_2.csv --diagnosis_col_name DKEY1 --diagnosis_code_min 200 --diagnosis_code_max 259"
+	sbatch ./cluster/submit_feature.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.4_impType_mice_nIter_800_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_3.csv --diagnosis_col_name DKEY1 --diagnosis_code_min 200 --diagnosis_code_max 259"
+	
+	Na < 0.2 dataset (mi):
+	sbatch ./cluster/submit_feature.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.2_impType_mi_nIter_90_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_1.csv --diagnosis_col_name DKEY1 --diagnosis_code_min 200 --diagnosis_code_max 259"
+	sbatch ./cluster/submit_feature.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.2_impType_mi_nIter_90_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_2.csv --diagnosis_col_name DKEY1 --diagnosis_code_min 200 --diagnosis_code_max 259"
+	sbatch ./cluster/submit_feature.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.2_impType_mi_nIter_90_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_3.csv --diagnosis_col_name DKEY1 --diagnosis_code_min 200 --diagnosis_code_max 259"
+	
+	Na < 0.4 dataset (mi):
+	sbatch ./cluster/submit_feature.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.4_impType_mi_nIter_150_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_1.csv --diagnosis_col_name DKEY1 --diagnosis_code_min 200 --diagnosis_code_max 259"
+	sbatch ./cluster/submit_feature.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.4_impType_mi_nIter_150_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_2.csv --diagnosis_col_name DKEY1 --diagnosis_code_min 200 --diagnosis_code_max 259"
+	sbatch ./cluster/submit_feature.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.4_impType_mi_nIter_150_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_3.csv --diagnosis_col_name DKEY1 --diagnosis_code_min 200 --diagnosis_code_max 259"
 
 * perform ODA/BMA, then calculate confidence intervals and contact A.L. and Z.L. again.
 
+	Na < 0.2 dataset (mice):
+	sbatch ./cluster/submit_experiment_r.sh "--dataset ./data/processed/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.2_impType_mice_nIter_80_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_1_label.csv --label diagnostic_outcome --niter 1000000 --burnIn 200000 --lambda 1"
+	sbatch ./cluster/submit_experiment_r.sh "--dataset ./data/processed/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.2_impType_mice_nIter_80_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_2_label.csv --label diagnostic_outcome --niter 1000000 --burnIn 200000 --lambda 1"
+	sbatch ./cluster/submit_experiment_r.sh "--dataset ./data/processed/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.2_impType_mice_nIter_80_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_3_label.csv --label diagnostic_outcome --niter 1000000 --burnIn 200000 --lambda 1"
+	
+	Na < 0.2 dataset (mi):
+	
+	
+	Na < 0.4 dataset (mi):
+	sbatch ./cluster/submit_experiment_r.sh "--dataset ./data/processed/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.4_impType_mi_nIter_150_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_1_label.csv --label diagnostic_outcome --niter 10000000 --burnIn 2000000 --lambda 1"
+	sbatch ./cluster/submit_experiment_r.sh "--dataset ./data/processed/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.4_impType_mi_nIter_150_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_2_label.csv --label diagnostic_outcome --niter 10000000 --burnIn 2000000 --lambda 1"
+	sbatch ./cluster/submit_experiment_r.sh "--dataset ./data/processed/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.4_impType_mi_nIter_150_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_3_label.csv --label diagnostic_outcome --niter 10000000 --burnIn 2000000 --lambda 1"
 
 ### Alternative Approach
 * Rebuild the dataset from the Insel Data Platform to include all lab data of all cases
