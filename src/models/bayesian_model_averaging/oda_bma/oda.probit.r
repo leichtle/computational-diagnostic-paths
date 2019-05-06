@@ -53,8 +53,8 @@ oda.probit <- function(xo, zo, niter, burnin, lam.spec=1, coeffShrink=0, ridgeLa
                 xogamma <- xo[, gamma == 1]
                 xoxogamma <- xoxo[gamma == 1, gamma == 1]
                 lamgamma <- lam[gamma == 1]
-				if (coeffShrink == 0)  # if no coefficient shrinking is applied, we keep the original linear model
-				{
+				if (coeffShrink == 0 || (ridgeLassoBlend != 0 && sum(gamma) <= 1)) {  # if no coefficient shrinking is applied, we keep the original linear model
+                    # or if lasso is involved and only one feature (algo limitation: https://stackoverflow.com/questions/29231123/why-cant-pass-only-1-coulmn-to-glmnet-when-it-is-possible-in-glm-function-in-r)
 					gamma.lm <- lm(yo ~ xogamma)
 					betaogamma <- gamma.lm$coefficients[-1]
 				}
@@ -94,8 +94,9 @@ oda.probit <- function(xo, zo, niter, burnin, lam.spec=1, coeffShrink=0, ridgeLa
                 ya <- mvrnorm(1, muya, varya)
             }
             yc <- c(yo, ya)
-			if (coeffShrink == 0)  # if no coefficient shrinking is applied, we keep the original linear model
-			{
+
+			if (coeffShrink == 0 || (ridgeLassoBlend != 0 && sum(gamma) <= 1)) {  # if no coefficient shrinking is applied, we keep the original linear model
+                # or if lasso is involved and only one feature (algo limitation: https://stackoverflow.com/questions/29231123/why-cant-pass-only-1-coulmn-to-glmnet-when-it-is-possible-in-glm-function-in-r)
 				fullc.lm <- lm(yc ~ xcin - 1)
 				betaolsc[i,] <- as.vector(fullc.lm$coefficients)
 			}
