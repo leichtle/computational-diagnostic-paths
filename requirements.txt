@@ -15,3 +15,8 @@ pandas==0.23.4
 sklearn==0.19.2
 xgboost==0.81
 matplotlib==3.0.2
+
+# jupyter handling
+jupyter==1.0.0
+notebook==5.7.4
+jupyterlab==0.35.4
