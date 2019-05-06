@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     for chunk in pd.read_csv(case_lab_data_file, chunksize=chunk_size, delimiter=';', encoding='Latin-1'):  # Time: O(chunk_qty * chunksize), Size: O(1)
         lab_values_per_case = chunk.pivot_table("WERT", ["CASEPSEUDOID"], "ANALYSE") # pivot into values per case form
-        #TODO: Check how many different measuring units are used across different columns (There mostly one, rarely two, considered noise)
+        # TODO: Check how many different measuring units are used across different columns (There mostly one, rarely two, considered noise)
 
         if lab_data_df is None:                                             # if this is the first pivotation chunk, keep it as is
             lab_data_df = lab_values_per_case
@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
         # log progress periodically
         if rows_processed > next_rows_threshold:
-            logger.info(str(next_rows_threshold) + "lab value rows processed.")
+            logger.info(str(next_rows_threshold) + " lab value rows processed.")
             next_rows_threshold += chunk_size
 
     case_diagnosis_df = None
@@ -62,12 +62,12 @@ if __name__ == "__main__":
             case_diagnosis_df['DKEY1'] = case_diagnosis_df['DKEY1_x'] + case_diagnosis_df['DKEY1_y']    # combine
             case_diagnosis_df = case_diagnosis_df.drop(['DKEY1_x', 'DKEY1_y'], axis=1)
 
-    rows_processed += chunk_size
+        rows_processed += chunk_size
 
-    # log progress periodically
-    if rows_processed > next_rows_threshold:
-        logger.info(str(next_rows_threshold) + " diagnosis rows processed.")
-        next_rows_threshold += chunk_size
+        # log progress periodically
+        if rows_processed > next_rows_threshold:
+            logger.info(str(next_rows_threshold) + " diagnosis rows processed.")
+            next_rows_threshold += chunk_size
 
     # join panda dfs
     case_lab_diagnosis_df = lab_data_df.join(case_diagnosis_df, on="CASEPSEUDOID", how='inner')
