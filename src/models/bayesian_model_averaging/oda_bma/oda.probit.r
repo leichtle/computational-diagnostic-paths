@@ -64,8 +64,13 @@ oda.probit <- function(xo, zo, niter, burnin, lam.spec=1, coeffShrink=0, ridgeLa
 					    betaogamma <- coef(gamma.lm)[-1]
                     }
                     else{
-                        glmmod <- glmnet(xogamma, y=yo, alpha=ridgeLassoBlend, lambda=coeffShrink, standardize=False)
-                        betaogamma <-coef(glmmod)[-1]
+                        if (sum(yo) == 0){
+                            betaogamma <- rep(0, dim(xogamma)[2])
+                        }
+                        else{
+                            glmmod <- glmnet(xogamma, y=yo, alpha=ridgeLassoBlend, lambda=coeffShrink)
+                            betaogamma <-coef(glmmod)[-1]
+                        }
                     }
 				}
 
@@ -106,8 +111,13 @@ oda.probit <- function(xo, zo, niter, burnin, lam.spec=1, coeffShrink=0, ridgeLa
 					betaolsc[i,] <- as.vector(coef(fullc.lm))
 				}
 				else{
-					glmmod <- glmnet(xcin - 1, y=yc, alpha=ridgeLassoBlend, lambda=coeffShrink, standardize=False)
-					betaolsc[i,] <- as.vector(coef(glmmod)[-1])
+                    if (sum(yc) == 0){
+                        betaolsc[i,] <- rep(0, dim(xcin - 1)[2])
+                    }
+                    else{
+					    glmmod <- glmnet(xcin - 1, y=yc, alpha=ridgeLassoBlend, lambda=coeffShrink)
+					    betaolsc[i,] <- as.vector(coef(glmmod)[-1])
+                    }
 				}
 			}
 
