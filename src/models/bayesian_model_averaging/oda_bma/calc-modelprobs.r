@@ -38,11 +38,11 @@ modelprobs.rb <-function(n.unique, niter, p, gammaunique, probmat.oda) {
     probmat.oda <- as.double(probmat.oda)
     modelprobs <- double(n.unique)
 
-    print(paste0("Unique models ", n.unique -1, "/Iterations ", niter - 1))
+    print(paste0("Unique models ", n.unique -1, "/Iterations ", niter - 1, "\n"))
     for (i in 0:(n.unique - 1)) {
-        print(paste0("Unique model " , i, " of " , n.unique - 1))
+        print(paste0("\nUnique model " , i, " of " , n.unique - 1, "\n"))
         tempsum <- 0
-        print("Iteration: ")
+        print("\nIteration: ")
         for (j in 0:(niter - 1)) {
             cat(paste0(" ", j))
             tempprod <- 1.0
