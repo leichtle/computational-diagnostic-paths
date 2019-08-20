@@ -1,35 +1,15 @@
-
-## R function using the .C interface for calculating Rao-Blackwellized estimates of model probabilities
-# NOTE: This function is not optimized and is not recommended for large problems at this time.
-#       If the number of unique models is considerably larger than 2^15 or the number of MCMC
-#       iterations is larger than 300,000 this can be quite time consuming.
-#
-# To use this function: 
-# At the terminal type:" R CMD SHLIB callmodelprobs.c" and press Enter
-# or if using Linux the system command can be used from within R: "system("R CMD SHLIB callmodelprobs.c")"
-
-#system("R CMD SHLIB callmodelprobs.c")
-#if(.Platform$OS.type == "unix") {
-#  dyn.load("./callmodelprobs.so")  # Linux/Unix
-#} else {
-#  dyn.load("./callmodelprobs.dll")  # Windows
-#}
-
-#if(!is.loaded("callmodelprobs")){ # make sure it is loaded
-#    stop('callmodelprobs is not loaded')
-#}
-
-
-#modelprobs.rb <- function(n.unique,niter,p,gammaunique,probmat.oda)
-#  .C("callmodelprobs",
-#     as.integer(n.unique),
-#     as.integer(niter),
-#     as.integer(p),
-#     as.integer(gammaunique),
-#     as.double(probmat.oda),
-#     modelprobs = double(n.unique))$modelprobs
+library(parallel)
 
 # reimplementation of modelprobs.rb in pure R
+# Arguments:
+# n.unique:     Number of unique models for which RB estimates of posterior model probabilities need to be calculated
+# niter:        Number of MCMC iterations for which the posterior inclusion probabilities
+#               will be used in the calculation
+# p:            Number of predictors in the full model
+# gammaunique:  An n.unique by p matrix of unique models (denoted by gamma) for which posterior model probabilities
+#               are to be estimated.
+# probmat.oda:  An niter by p matrix of posterior inclusion probabilities available from the output of oda.bma,
+#               based on which the Rao-Blackwellized estimates of model probabilities will be calculated
 modelprobs.rb <-function(n.unique, niter, p, gammaunique, probmat.oda) {
     n.unique <- as.integer(n.unique)
     niter <- as.integer(niter)
@@ -38,8 +18,11 @@ modelprobs.rb <-function(n.unique, niter, p, gammaunique, probmat.oda) {
     probmat.oda <- as.double(probmat.oda)
     modelprobs <- double(n.unique)
 
+    cores <- detectCores() # get all available cores
+    print(paste0("Available cores:", cores))
     print(paste0("Unique models ", n.unique -1, "/Iterations ", niter - 1, "\n"))
-    for (i in 0:(n.unique - 1)) {
+
+    modelprobs <- mcmapply(function(i, n.unique, niter, p, gammaunique, probmat.oda) {
         print(paste0("\nUnique model " , i, " of " , n.unique - 1, "\n"))
         tempsum <- 0
         print("\nIteration: ")
@@ -56,22 +39,14 @@ modelprobs.rb <-function(n.unique, niter, p, gammaunique, probmat.oda) {
             }
             tempsum <- tempsum + tempprod
         }
-        modelprobs[[1 + i]] <- tempsum / niter
-    }
+        return(tempsum / niter)
+    }, i=0:(n.unique - 1), MoreArgs=list(n.unique=n.unique, niter=niter, p=p, gammaunique=gammaunique, probmat.oda=probmat.oda), mc.cores=cores-1)
 
     return(modelprobs)
 }
-# Arguments:
-# n.unique:     Number of unique models for which RB estimates of posterior model probabilities need to be calculated
-# niter:        Number of MCMC iterations for which the posterior inclusion probabilities
-#               will be used in the calculation
-# p:            Number of predictors in the full model
-# gammaunique:  An n.unique by p matrix of unique models (denoted by gamma) for which posterior model probabilities
-#               are to be estimated. 
-# probmat.oda:  An niter by p matrix of posterior inclusion probabilities available from the output of oda.bma,
-#               based on which the Rao-Blackwellized estimates of model probabilities will be calculated
 
 
+# Usage:
 # test run for probit regression using Pima Indians diabetes data
 #burnin.sim <- 500;
 #Gtot <- 1000;
