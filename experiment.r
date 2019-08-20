@@ -49,7 +49,7 @@ if (is.null(opt$appendix)){
 # load data from csv
 cat("Loading data from csv...")
 miData<-read.csv(opt$dataset, sep=",", header=TRUE)
-cat("Done.\n")
+cat("...Done.\n")
 
 # Calculate oda inclusion probabilities for ICD-10
 cat("Sanity check for dataset:\n") # check if dimensions and names of matrix look sane
@@ -70,6 +70,7 @@ print(label)
 features <- subset(miData, select=featureNames)  # extract features
 labels <- miData[label]  # extract label
 
+print("Sampling models using oda-bma method to estimate inclusion probabilities of features for ...")
 odaResults <- oda.bma(x = features, y = labels, niter = iterationQty, burnin = burnIn, lambda = lambda, coeffShrink=coeffShrink, ridgeLassoBlend=ridgeLassoBlend, model = "probit", prior = "normal")
 
 # print(odaResults$incprob.rb)
@@ -77,7 +78,9 @@ odaResults <- oda.bma(x = features, y = labels, niter = iterationQty, burnin = b
 # print(odaResults$incprob)
 # print(odaResults$gamma)
 # print(odaResults$odds)
+print("...Done.\n")
 
+print("Calculating posterior probability of unsampled models...")
 # matrix of unique models from ODA
 gamma.u <- unique(odaResults$gamma[-c(1:burnIn),])
 
@@ -87,17 +90,24 @@ probest <- modelprobs.rb(n.unique=nrow(gamma.u),
 						p = ncol(gamma.u),
 						gammaunique=t(gamma.u),
 						probmat.oda = t(odaResults$incprob[-c(1:burnIn),]))
+print("...Done.\n")
 
-print("Estimated posterior probability of unsampled models (should be as small as possible):")
-print(1-probest)
+
+print("Results:\n")
+print("----------")
+
+print("Estimated posterior probability of unsampled models (= the size of the unsampled model space, should be < 0.05, 0.025 or 0.01):")
+print(1 - sum(probest))
 
 # create a new dataset for inclusion probabilities
 incprobsDf <- data.frame(matrix(ncol = length(featureNames), nrow = 0))
 colnames(incprobsDf) <- featureNames
 incprobsDf[1,] <- odaResults$incprob.rb
 
-print("Results:")
+print("Inclusion probabilities of features:")
 print(incprobsDf)
+
+print("----------")
 
 cat("Writing dataset to file...")
 fileName <- sub(pattern = "(.*?)\\.[a-zA-Z]*$", replacement = "\\1", basename(datasetPath))
