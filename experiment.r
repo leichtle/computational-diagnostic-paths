@@ -70,7 +70,7 @@ print(label)
 features <- subset(miData, select=featureNames)  # extract features
 labels <- miData[label]  # extract label
 
-print("Sampling models using oda-bma method to estimate inclusion probabilities of features for ...")
+print(paste0("Sampling models using oda-bma method to estimate inclusion probabilities of features for", iterationQty, " ..."))
 odaResults <- oda.bma(x = features, y = labels, niter = iterationQty, burnin = burnIn, lambda = lambda, coeffShrink=coeffShrink, ridgeLassoBlend=ridgeLassoBlend, model = "probit", prior = "normal")
 
 # print(odaResults$incprob.rb)
