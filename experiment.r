@@ -124,4 +124,3 @@ path <- paste0(path, fileName, "_niter_", iterationQty, "_burnIn_", burnIn, "_ri
 print(path)
 write.csv(incprobsDf, file=path, row.names = FALSE)
 cat("...Done.")
-
