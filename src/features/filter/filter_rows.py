@@ -10,7 +10,7 @@ from sklearn.base import BaseEstimator, TransformerMixin  # base transformer cla
 
 
 class ZeroSumDropper(BaseEstimator, TransformerMixin):
-    """Drop columns which contain strings."""
+    """Drop rows which are zero sum."""
 
     def fit(self, x_df: pd.DataFrame, y_df: pd.DataFrame=None):
         return self
