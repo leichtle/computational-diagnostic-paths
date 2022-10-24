@@ -129,15 +129,6 @@ The following measures lead to finding predictive analytes to diagnose Myocardia
   * Bootstrap (0.4)
   *  ```bootstrap.py --dataset "./data/processed/bootstraps/0.4/1.csv" --dataset "./data/processed/bootstraps/0.4/2.csv" --dataset "./data/processed/bootstraps/0.4/3.csv" --save-path "./data/processed/bootstraps/0.4/inclusion_probabilities.png"```
 
-### Alternative Approach
-* Build a dataset of all lab data of all cases
-* Filter the dataset to only contain cases where Troponin (TNT) was measured, since this is the current go-to analyte to detect MI. Then drop all columns that contain no data.
-  * ```sbatch ./cluster/submit_dataset.sh "--dataset ./data/raw/20181218000000_case_lab_diagnosis_data.csv --diagnosis_indicator_column 638 --na_drop_threshold 1.0 --skip_imputation"```
-* Based on this new dataset, build diagnostic output feature
-  * ```sbatch ./cluster/submit_feature.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_naDropThreshold_1.0_indicatorColumns_['638'].csv --diagnosis_col_name DKEY1 --diagnosis_code_min 200 --diagnosis_code_max 259"```
-* Assess feature importance using xgboost
-  * ```sbatch ./cluster/submit_experiment.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_naDropThreshold_1.0_indicatorColumns_['638']_label.csv --importance_method xgb"```
-
 --------
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
