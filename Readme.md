@@ -65,12 +65,8 @@ Project Organization
     └── tox.ini             <- tox file with settings for running tox; see tox.testrun.org
 
 
-## State of Project
-
-Results from a proof-of-concept (POC) could not exactly be reproduced, since BMA does not converge at all over multiple runs with applied parameters. However, using a higher number of iterations to make BMA converge results in a different set of inclusion probabilities, of which several are similar to the ones found with the POC. When trying to apply the same method to a higher number of features, the multiple imputation step diverges, thus making the method not directly applicable to larger datasets. Additionally, analysis of the POC resulted in a list of conceptual problems. The discussion thereof is done in the separate 'questions and answers' section below.
-
-After a discussion with Alex Leichtle and Zara Liniger, we think the following measures could lead to a first success in finding predictive analytes to diagnose Myocardial Ischemia (MI):
-* Rebuild the dataset from the Insel Data Platform to include all lab data of all cases
+The following measures lead to finding predictive analytes to diagnose Myocardial Ischemia (MI):
+* Build a dataset of all lab data of all cases
 * Filter the dataset to only contain cases where Troponin (TNT) was measured, since this is the current go-to analyte to detect MI. Then drop all columns that lack more than na_drop_threshold amount of data.
   * ```sbatch ./cluster/submit_dataset.sh "--dataset ./data/raw/20181218000000_case_lab_diagnosis_data.csv --diagnosis_indicator_column 638 --na_drop_threshold 0.8 --skip_imputation"```
   * ```sbatch ./cluster/submit_dataset.sh "--dataset ./data/raw/20181218000000_case_lab_diagnosis_data.csv --diagnosis_indicator_column 638 --na_drop_threshold 0.6 --skip_imputation"```
@@ -129,38 +125,18 @@ After a discussion with Alex Leichtle and Zara Liniger, we think the following m
   * ```sbatch ./cluster/submit_experiment_r.sh "--dataset ./data/processed/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.4_impType_mi_nIter_150_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_2_label.csv --label diagnostic_outcome --niter 10000000 --burnIn 2000000 --lambda 1"```
   * ```sbatch ./cluster/submit_experiment_r.sh "--dataset ./data/processed/20181218000000_case_lab_diagnosis_data_indicatorColumns_['638']_naDropThreshold_0.4_impType_mi_nIter_150_chainQty_3_rHatsConvergence_1.1_normImputation_FALSE_3_label.csv --label diagnostic_outcome --niter 10000000 --burnIn 2000000 --lambda 1"```
 
-* Finally, we produce a bootstrapped result (should be extended to more than 3 runs, but serves as proof of concept):
+* Finally, we produce a bootstrapped result:
   * Bootstrap (0.4)
   *  ```bootstrap.py --dataset "./data/processed/bootstraps/0.4/1.csv" --dataset "./data/processed/bootstraps/0.4/2.csv" --dataset "./data/processed/bootstraps/0.4/3.csv" --save-path "./data/processed/bootstraps/0.4/inclusion_probabilities.png"```
 
 ### Alternative Approach
-* Rebuild the dataset from the Insel Data Platform to include all lab data of all cases
+* Build a dataset of all lab data of all cases
 * Filter the dataset to only contain cases where Troponin (TNT) was measured, since this is the current go-to analyte to detect MI. Then drop all columns that contain no data.
   * ```sbatch ./cluster/submit_dataset.sh "--dataset ./data/raw/20181218000000_case_lab_diagnosis_data.csv --diagnosis_indicator_column 638 --na_drop_threshold 1.0 --skip_imputation"```
 * Based on this new dataset, build diagnostic output feature
   * ```sbatch ./cluster/submit_feature.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_naDropThreshold_1.0_indicatorColumns_['638'].csv --diagnosis_col_name DKEY1 --diagnosis_code_min 200 --diagnosis_code_max 259"```
 * Assess feature importance using xgboost
   * ```sbatch ./cluster/submit_experiment.sh "--dataset ./data/interim/20181218000000_case_lab_diagnosis_data_naDropThreshold_1.0_indicatorColumns_['638']_label.csv --importance_method xgb"```
-  
-## Questions and Answers
-
-* **BUSINESS** _What would we do based on the calculated inclusion probabilities to improve diagnostics?_
-For now, the primary goal is to write one or multiple papers. In the future, it might be a great support for Data Driven Diagnostics or similar.
-
-* **DATA** _Does following a diagnostic path to choose an analyte result in predicting high inclusion probability thereof?_
-That is part of the reason why our main goal should be to check which of the analytes do not hold up to our expectations and feature a low inclusion probability.
-
-* **DATA** _Can we impute a value that is only set in negative samples? The data is definitely not missing at random. Since the domain is different between positive and negative samples, this knowledge can not be transferred._
-No, this surely does not turn out well. Our main goal should be to find an analyte, that indicates the suspicion of our chosen diagnosis when measured. Filtered by this, we can check what other analytes were measured in the same diagnostic path to look for suitable positive and negative diagnoses. This will probably solve the problem with the diverging imputation.
-
-* **FEATURE** _The main diagnosis is not necessarily the full label of the sample, instead we should get the full set of diagnoses._
-This is true. For MI, since it is a very life threatening condition, we might be lucky to find it as the main diagnosis. For other diagnoses, this might require more thought on how to tackle the problem.
-
-* **EXPERIMENT** _Does BMA require only positive samples or does it require positive and negative samples?_
-It trains a linear regressor on the selected analytes, so it requires the negative samples as well.
-
-* **EXPERIMENT** _Is inclusion probability really similar to feature importance?_
-This is an open discussion, but since our question is really which analyte(s) are predictive for what diagnosis, the terms can be considered equal.
 
 --------
 
